@@ -1,256 +1,42 @@
-function Create-ResourceDynamicParameter {
-    $ParameterName = 'Resource'
+function New-ResourceDynamicParameter
+(
+    [Parameter(Mandatory = $true)][string]$ParameterType
+) {
+    $ParameterName = "$($ParameterType)"
     $RuntimeParameterDictionary = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
     $AttributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
     $ParameterAttribute = New-Object System.Management.Automation.ParameterAttribute
     $ParameterAttribute.Mandatory = $true
     $AttributeCollection.Add($ParameterAttribute)
-    # Generate and set the ValidateSet. You definitely want to change this. This part populates your set. 
-    $ResourceList = @( 
-        "ActionTypes",
-        "AdditionalInvoiceFieldValues",
-        "Appointments",
-        "AttachmentInfo",
-        "BillingCodes",
-        "BillingItemApprovalLevels",
-        "BillingItems",
-        "ChangeOrderCharges",
-        "ChangeRequestLinks",
-        "ChecklistLibraries",
-        "ChecklistLibraryChecklistItems",
-        "ChecklistLibraries",
-        "ClassificationIcons",
-        "ClientPortalUsers",
-        "ComanagedAssociations",
-        "Companies",
-        "CompanyAlerts",
-        "Companies",
-        "CompanyAttachments",
-        "Companies",
-        "Companies",
-        "CompanyLocations",
-        "Companies",
-        "CompanyNotes",
-        "Companies",
-        "CompanySiteConfigurations",
-        "Companies",
-        "CompanyTeams",
-        "Companies",
-        "CompanyToDos",
-        "Companies",
-        "CompanyWebhookExcludedResources",
-        "CompanyWebhooks",
-        "CompanyWebhookFields",
-        "CompanyWebhooks",
-        "CompanyWebhooks",
-        "CompanyWebhookUdfFields",
-        "CompanyWebhooks",
-        "ConfigurationItemBillingProductAssociations",
-        "ConfigurationItems",
-        "ConfigurationItemCategories",
-        "ConfigurationItemCategoryUdfAssociations",
-        "ConfigurationItemCategories",
-        "ConfigurationItemNotes",
-        "ConfigurationItems",
-        "ConfigurationItems",
-        "ConfigurationItemTypes",
-        "ContactBillingProductAssociations",
-        "Contacts",
-        "ContactGroupContacts",
-        "ContactGroups",
-        "ContactGroups",
-        "Contacts",
-        "ContactWebhookExcludedResources",
-        "ContactWebhooks",
-        "ContactWebhookFields",
-        "ContactWebhooks",
-        "ContactWebhooks",
-        "ContactWebhookUdfFields",
-        "ContactWebhooks",
-        "ContractBillingRules",
-        "Contracts",
-        "ContractBlockHourFactors",
-        "Contracts",
-        "ContractBlocks",
-        "Contracts",
-        "ContractCharges",
-        "Contracts",
-        "ContractExclusionBillingCodes",
-        "Contracts",
-        "ContractExclusionRoles",
-        "Contracts",
-        "ContractExclusionSetExcludedRoles",
-        "ContractExclusionSets",
-        "ContractExclusionSetExcludedWorkTypes",
-        "ContractExclusionSets",
-        "ContractExclusionSets",
-        "ContractMilestones",
-        "Contracts",
-        "ContractNotes",
-        "Contracts",
-        "ContractRates",
-        "Contracts",
-        "ContractRetainers",
-        "Contracts",
-        "ContractRoleCosts",
-        "Contracts",
-        "Contracts",
-        "ContractServiceBundles",
-        "Contracts",
-        "ContractServiceBundleUnits",
-        "Contracts",
-        "ContractServices",
-        "Contracts",
-        "ContractServiceUnits",
-        "Contracts",
-        "ContractTicketPurchases",
-        "Contracts",
-        "Countries",
-        "Currencies",
-        "Departments",
-        "ExpenseItems",
-        "Expenses",
-        "ExpenseReports",
-        "Holidays",
-        "HolidaySets",
-        "HolidaySets",
-        "InternalLocations",
-        "InternalLocationWithBusinessHours",
-        "InventoryItems",
-        "InventoryItemSerialNumbers",
-        "InventoryItems",
-        "InventoryLocations",
-        "InventoryTransfers",
-        "Invoices",
-        "InvoiceTemplates",
-        "NotificationHistory",
-        "Opportunities",
-        "OpportunityAttachments",
-        "Opportunities",
-        "OrganizationalLevel1s",
-        "OrganizationalLevel2s",
-        "OrganizationalLevelAssociations",
-        "OrganizationalResources",
-        "OrganizationalLevelAssociations",
-        "PaymentTerms",
-        "Phases",
-        "Projects",
-        "PriceListMaterialCodes",
-        "PriceListProducts",
-        "PriceListProductTiers",
-        "PriceListRoles",
-        "PriceListServiceBundles",
-        "PriceListServices",
-        "PriceListWorkTypeModifiers",
-        "ProductNotes",
-        "Products",
-        "Products",
-        "ProductTiers",
-        "Products",
-        "ProductVendors",
-        "Products",
-        "ProjectAttachments",
-        "Projects",
-        "ProjectCharges",
-        "Projects",
-        "ProjectNotes",
-        "Projects",
-        "Projects",
-        "PurchaseApprovals",
-        "PurchaseOrderItemReceiving",
-        "PurchaseOrderItems",
-        "PurchaseOrderItems",
-        "PurchaseOrders",
-        "PurchaseOrders",
-        "QuoteItems",
-        "Quotes",
-        "QuoteLocations",
-        "Quotes",
-        "QuoteTemplates",
-        "ResourceRoleDepartments",
-        "Resources",
-        "ResourceRoleQueues",
-        "Resources",
-        "ResourceRoles",
-        "Resources",
-        "Resources",
-        "ResourceServiceDeskRoles",
-        "Resources",
-        "ResourceSkills",
-        "Resources",
-        "Roles",
-        "SalesOrders",
-        "Opportunities",
-        "ServiceBundles",
-        "ServiceBundleServices",
-        "ServiceBundles",
-        "ServiceCalls",
-        "ServiceCallTaskResources",
-        "ServiceCallTasks",
-        "ServiceCallTasks",
-        "ServiceCalls",
-        "ServiceCallTicketResources",
-        "ServiceCallTickets",
-        "ServiceCallTickets",
-        "ServiceCalls",
-        "ServiceLevelAgreementResults",
-        "ServiceLevelAgreements",
-        "Services",
-        "ShippingTypes",
-        "Skills",
-        "SubscriptionPeriods",
-        "Subscriptions",
-        "Subscriptions",
-        "SurveyResults",
-        "Surveys",
-        "TaskAttachments",
-        "Tasks",
-        "TaskNotes",
-        "Tasks",
-        "TaskPredecessors",
-        "Tasks",
-        "Tasks",
-        "Projects",
-        "TaskSecondaryResources",
-        "Tasks",
-        "TaxCategories",
-        "Taxes",
-        "TaxRegions",
-        "TicketAdditionalConfigurationItems",
-        "Tickets",
-        "TicketAdditionalContacts",
-        "Tickets",
-        "TicketAttachments",
-        "Tickets",
-        "TicketCategories",
-        "TicketCategoryFieldDefaults",
-        "TicketCategories",
-        "TicketChangeRequestApprovals",
-        "Tickets",
-        "TicketCharges",
-        "Tickets",
-        "TicketChecklistItems",
-        "Tickets",
-        "TicketHistory",
-        "TicketNotes",
-        "Tickets",
-        "TicketRmaCredits",
-        "Tickets",
-        "Tickets",
-        "TicketSecondaryResources",
-        "Tickets",
-        "TimeEntries",
-        "UserDefinedFieldDefinitions",
-        "UserDefinedFieldListItems",
-        "UserDefinedFields",
-        "WebhookEventErrorLogs",
-        "WorkTypeModifiers")
-    $ValidateSetAttribute = New-Object System.Management.Automation.ValidateSetAttribute( $ResourceList )
+    
+    $Swagger = get-content "v1.json" -raw | ConvertFrom-Json
+    $Queries = foreach ($Path in $swagger.paths.psobject.Properties) {
+        [PSCustomObject]@{
+            Name  = $path.Name
+            Value = $path.value
+        }
+    }
+    if ($($ParameterType) -eq "Resource") {
+        $ResourceList = foreach ($query in  $Queries | where-object { $_.name -like "*{id}*" }  ) {
+            $resource = ($query.name -split "/")[2]
+            $resource
+        }
+    }
+    
+    if ($($ParameterType) -eq "Definitions") {
+        $ResourceList = foreach ($Path in $swagger.definitions.psobject.Properties) {
+            $path.Name
+        }
+    
+    }
+    
+    $ValidateSetAttribute = New-Object System.Management.Automation.ValidateSetAttribute($ResourceList)
     $AttributeCollection.Add($ValidateSetAttribute)
     $RuntimeParameter = New-Object System.Management.Automation.RuntimeDefinedParameter($ParameterName, [string], $AttributeCollection)
     $RuntimeParameterDictionary.Add($ParameterName, $RuntimeParameter)
     return $RuntimeParameterDictionary
 }
+
 
 function Add-AutotaskBaseURI (
     [ValidateSet(
@@ -306,13 +92,14 @@ function Get-AutotaskAPIResource {
         [Parameter(Mandatory = $false)]$SearchQuery
     )
     DynamicParam {
-        Create-ResourceDynamicParameter
+        New-ResourceDynamicParameter -ParameterType resource
     }
     begin {
         if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
             Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
             break 
         }
+        $resource = $PSBoundParameters.resource
         $headers = $Global:AutotaskAuthHeader
         if ($ID) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" }
         if ($SearchQuery) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
@@ -340,14 +127,14 @@ function New-AutotaskAPIResource {
         [Parameter(Mandatory = $true)]$Body
     )
     DynamicParam {
-        Create-ResourceDynamicParameter
+        New-ResourceDynamicParameter -ParameterType Resource
     }
     begin {
         if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
             Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
             break 
         }
-
+        $resource = $PSBoundParameters.resource
         $headers = $Global:AutotaskAuthHeader
         if ($ID) {
             $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" 
@@ -381,14 +168,14 @@ function Set-AutotaskAPIResource {
         [Parameter(Mandatory = $true)]$ID
     )
     DynamicParam {
-        Create-ResourceDynamicParameter
+        New-ResourceDynamicParameter -ParameterType 'Resource'
     }
     begin {
         if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
             Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
             break 
         }
-
+        $resource = $PSBoundParameters.resource
         $headers = $Global:AutotaskAuthHeader
         $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID"          
 
@@ -405,6 +192,57 @@ function Set-AutotaskAPIResource {
         }
         catch {
             write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
+        }
+
+    }
+}
+
+
+function New-AutotaskBody {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $false)][switch]$NoContent
+    )
+    DynamicParam {
+        New-ResourceDynamicParameter -ParameterType "Definitions"
+    }
+    begin {
+        if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
+            Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
+            break 
+        }
+        $Definitions = $PSBoundParameters.Definitions
+    }
+    process {
+        try {
+            $Swagger = get-content "v1.json" -raw | ConvertFrom-Json
+            $DefinitionsList = foreach ($Path in $swagger.definitions.psobject.Properties) {
+                [PSCustomObject]@{
+                    Name  = $path.Name
+                    Value = $path.value
+                }
+              
+            }
+            $ObjectTemplate = ($DefinitionsList | Where-Object { $_.Name -eq $Definitions }).value.Properties
+            if (!$ObjectTemplate) { 
+                Write-Warning "No object template found for this definition: $Definitions" 
+            }
+            else {
+                if ($NoContent) { 
+                    foreach ($prop in $ObjectTemplate.psobject.Properties.Name) { 
+                        $ObjectTemplate.$prop = $null 
+                    }
+                    $ReturnedDef = $ObjectTemplate 
+                }
+                if (!$NoContent) {
+                    $ReturnedDef = $ObjectTemplate
+                }
+            }
+            return $ReturnedDef
+
+        }
+        catch {
+            write-error "Getting object failed: $($_.Exception.Message)"
         }
 
     }
