@@ -281,19 +281,28 @@ function Add-AutotaskAPIAuth (
     [Parameter(Mandatory = $true)]$secret
 ) {
     $Global:AutotaskAuthHeader = @{
-        ApiIntegrationcode = $ApiIntegrationcode
-        Username           = $username
-        Secret             = $secret
+        'ApiIntegrationcode' = $ApiIntegrationcode
+        'UserName'           = $username
+        'Secret'             = $secret
+        'Content-Type'       = 'application/json'
     }
-    write-host "Enter your Autotask REST service URL." -ForegroundColor Yellow
-    Add-AutotaskBaseURI
+    write-host "Retrieving webservices URI based on username" -ForegroundColor Green
+    try {
+        $AutotaskBaseURI = Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/v1.0/zoneInformation?user=$($Global:AutotaskAuthHeader.UserName)"
+        $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A","/A"
+        Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url
+        write-host "Set AutotaskBaseURI to $($AutotaskBaseURI.url) " -ForegroundColor green
+    }
+    catch {
+        write-host "Could not automatically determine webservices URI. Please run Add-AutotaskBaseURI" -ForegroundColor red
+    }
 
 }
 
 function Get-AutotaskAPIItem {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true)][int]$ID
+        [Parameter(Mandatory = $true)][int64]$ID
     )
     DynamicParam {
         Create-ResourceDynamicParameter
