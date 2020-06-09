@@ -253,9 +253,26 @@ function Create-ResourceDynamicParameter {
 }
 
 function Add-AutotaskBaseURI (
+    [ValidateSet(
+        "https://webservices2.autotask.net/atservicesrest",
+        "https://webservices11.autotask.net/atservicesrest",
+        "https://webservices1.autotask.net/atservicesrest",
+        "https://webservices17.autotask.net/atservicesrest",
+        "https://webservices3.autotask.net/atservicesrest",
+        "https://webservices14.autotask.net/atservicesrest",
+        "https://webservices5.autotask.net/atservicesrest",
+        "https://webservices15.autotask.net/atservicesrest",
+        "https://webservices4.autotask.net/atservicesrest",
+        "https://webservices16.autotask.net/atservicesrest",
+        "https://webservices6.autotask.net/atservicesrest",
+        "https://prde.autotask.net/atservicesrest",
+        "https://pres.autotask.net/atservicesrest",
+        "https://webservices18.autotask.net/atservicesrest",
+        "https://webservices19.autotask.net/atservicesrest",
+        "https://webservices12.autotask.net/atservicesrest")]
     [Parameter(Mandatory = $true)]$BaseURI
 ) {
-    $Global:AutotaskBaseURI = $BaseURI
+    $Global:AutotaskBaseURI = "$($BaseURI)/v1.0"
 }
 
 function Add-AutotaskAPIAuth (
@@ -287,10 +304,10 @@ function Get-AutotaskAPIItem {
             break 
         }
         $headers = $Global:AutotaskAuthHeader
-        $headers.add('id',$ID)
-        $SetURI = "$($BaseURI)/$($resource)/$ID" 
+        $headers.add('id', $ID)
+        $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" 
     }
-    
+
     process {
         try {
             Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
@@ -315,8 +332,8 @@ function Search-AutotaskAPI {
             break 
         }
         $headers = $Global:AutotaskAuthHeader
-        $headers.add('search',$SearchQuery)
-        $SetURI = "$($BaseURI)/$($resource)/query" 
+        $headers.add('search', $SearchQuery)
+        $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query" 
     }
     process {
         try {
