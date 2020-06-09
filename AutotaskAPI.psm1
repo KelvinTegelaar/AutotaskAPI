@@ -341,8 +341,7 @@ function Search-AutotaskAPI {
             break 
         }
         $headers = $Global:AutotaskAuthHeader
-        $headers.add('search', $SearchQuery)
-        $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query" 
+        $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" 
     }
     process {
         try {
