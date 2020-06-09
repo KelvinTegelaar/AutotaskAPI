@@ -75,6 +75,7 @@ function Add-AutotaskAPIAuth (
     write-host "Retrieving webservices URI based on username" -ForegroundColor Green
     try {
         $AutotaskBaseURI = Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/v1.0/zoneInformation?user=$($Global:AutotaskAuthHeader.UserName)"
+        #Little hacky, but rest api current returns double slashes everywhere.
         $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A", "/A"
         Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url
         write-host "Set AutotaskBaseURI to $($AutotaskBaseURI.url) " -ForegroundColor green
@@ -88,8 +89,8 @@ function Add-AutotaskAPIAuth (
 function Get-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $false)][int64]$ID,
-        [Parameter(Mandatory = $false)]$SearchQuery
+        [Parameter(ParameterSetName='ID',Mandatory = $true)][String]$ID,
+        [Parameter(ParameterSetName='SearchQuery',Mandatory = $true)][String]$SearchQuery
     )
     DynamicParam {
         New-ResourceDynamicParameter -ParameterType resource
@@ -103,10 +104,6 @@ function Get-AutotaskAPIResource {
         $headers = $Global:AutotaskAuthHeader
         if ($ID) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" }
         if ($SearchQuery) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
-        if (!$SearchQuery -and !$ID) { 
-            Write-Error "You must enter either a search query, or ID." 
-            break
-        }
     }
 
     process {
@@ -136,17 +133,9 @@ function New-AutotaskAPIResource {
         }
         $resource = $PSBoundParameters.resource
         $headers = $Global:AutotaskAuthHeader
-        if ($ID) {
-            $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" 
-        }             
-        else {
-            $SetURI = "$($Global:AutotaskBaseURI)/$($resource)" 
-        }
 
-        if (!$Body) { 
-            Write-Error "You must send a body." 
-            break
-        }
+            $SetURI = "$($Global:AutotaskBaseURI)/$($resource)" 
+
         $SendingBody = $body | ConvertTo-Json -Depth 10
     }
     
@@ -178,11 +167,6 @@ function Set-AutotaskAPIResource {
         $resource = $PSBoundParameters.resource
         $headers = $Global:AutotaskAuthHeader
         $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID"          
-
-        if (!$Body -or !$ID) { 
-            Write-Error "You must send a body and ID." 
-            break
-        }
         $SendingBody = $body | ConvertTo-Json -Depth 10
     }
     
