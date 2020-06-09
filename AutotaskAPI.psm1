@@ -284,12 +284,12 @@ function Add-AutotaskAPIAuth (
         'ApiIntegrationcode' = $ApiIntegrationcode
         'UserName'           = $username
         'Secret'             = $secret
-        'Content-Type'       = 'application/json'
+        'ContentType'        = 'application/json'
     }
     write-host "Retrieving webservices URI based on username" -ForegroundColor Green
     try {
         $AutotaskBaseURI = Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/v1.0/zoneInformation?user=$($Global:AutotaskAuthHeader.UserName)"
-        $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A","/A"
+        $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A", "/A"
         Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url
         write-host "Set AutotaskBaseURI to $($AutotaskBaseURI.url) " -ForegroundColor green
     }
@@ -299,10 +299,11 @@ function Add-AutotaskAPIAuth (
 
 }
 
-function Get-AutotaskAPIItem {
+function Get-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true)][int64]$ID
+        [Parameter(Mandatory = $false)][int64]$ID,
+        [Parameter(Mandatory = $false)]$SearchQuery
     )
     DynamicParam {
         Create-ResourceDynamicParameter
@@ -313,8 +314,12 @@ function Get-AutotaskAPIItem {
             break 
         }
         $headers = $Global:AutotaskAuthHeader
-        $headers.add('id', $ID)
-        $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" 
+        if ($ID) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" }
+        if ($SearchQuery) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
+        if (!$SearchQuery -and !$ID) { 
+            Write-Error "You must enter either a search query, or ID." 
+            break
+        }
     }
 
     process {
@@ -322,15 +327,17 @@ function Get-AutotaskAPIItem {
             Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
         }
         catch {
-            write-error "Connecting to the Autotask API failed. Returned error: $($_.Exception.Message)"
+            write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
         }
 
     }
 }
-function Search-AutotaskAPI {
+
+
+function New-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true)]$SearchQuery
+        [Parameter(Mandatory = $true)]$Body
     )
     DynamicParam {
         Create-ResourceDynamicParameter
@@ -340,15 +347,64 @@ function Search-AutotaskAPI {
             Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
             break 
         }
+
         $headers = $Global:AutotaskAuthHeader
-        $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" 
+        if ($ID) {
+            $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" 
+        }             
+        else {
+            $SetURI = "$($Global:AutotaskBaseURI)/$($resource)" 
+        }
+
+        if (!$Body) { 
+            Write-Error "You must send a body." 
+            break
+        }
+        $SendingBody = $body | ConvertTo-Json -Depth 10
     }
+    
     process {
         try {
-            Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
+            Invoke-RestMethod -Uri $SetURI -headers $Headers -Method post -Body $SendingBody
         }
         catch {
-            write-error "Connecting to the Autotask API failed. Returned error: $($_.Exception.Message)"
+            write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
+        }
+
+    }
+}
+
+function Set-AutotaskAPIResource {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]$Body,
+        [Parameter(Mandatory = $true)]$ID
+    )
+    DynamicParam {
+        Create-ResourceDynamicParameter
+    }
+    begin {
+        if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
+            Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
+            break 
+        }
+
+        $headers = $Global:AutotaskAuthHeader
+        $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID"          
+
+        if (!$Body -or !$ID) { 
+            Write-Error "You must send a body and ID." 
+            break
+        }
+        $SendingBody = $body | ConvertTo-Json -Depth 10
+    }
+    
+    process {
+        try {
+            Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Patch -Body $SendingBody
+        }
+        catch {
+            write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
         }
 
     }
