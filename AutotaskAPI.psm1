@@ -9,7 +9,7 @@ function New-ResourceDynamicParameter
     $ParameterAttribute.Mandatory = $true
     $AttributeCollection.Add($ParameterAttribute)
     
-    $Swagger = get-content "v1.json" -raw | ConvertFrom-Json
+    $Swagger = get-content "$($PSScriptRoot)\v1.json" -raw | ConvertFrom-Json
     $Queries = foreach ($Path in $swagger.paths.psobject.Properties) {
         [PSCustomObject]@{
             Name  = $path.Name
@@ -90,7 +90,7 @@ function Add-AutotaskAPIAuth (
 function Get-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(ParameterSetName = 'ID', Mandatory = $true)][String]$ID,
+        [Parameter(ParameterSetName = 'ID', Mandatory = $true,ValueFromPipelineByPropertyName = $true)][String]$ID,
         [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $true)][String]$SearchQuery
     )
     DynamicParam {
@@ -122,7 +122,7 @@ function Get-AutotaskAPIResource {
 function New-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true)]$Body
+        [Parameter(Mandatory = $true,ValueFromPipelineByPropertyName = $true)]$Body
     )
     DynamicParam {
         New-ResourceDynamicParameter -ParameterType Resource
@@ -155,7 +155,7 @@ function Set-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory = $true)]$Body,
-        [Parameter(Mandatory = $true)]$ID
+        [Parameter(Mandatory = $true,ValueFromPipelineByPropertyName = $true)]$ID
     )
     DynamicParam {
         New-ResourceDynamicParameter -ParameterType 'Resource'
@@ -200,7 +200,7 @@ function New-AutotaskBody {
     }
     process {
         try {
-            $Swagger = get-content "v1.json" -raw | ConvertFrom-Json
+            $Swagger = get-content "$($PSScriptRoot)\v1.json" -raw | ConvertFrom-Json
             $DefinitionsList = foreach ($Path in $swagger.definitions.psobject.Properties) {
                 [PSCustomObject]@{
                     Name  = $path.Name
