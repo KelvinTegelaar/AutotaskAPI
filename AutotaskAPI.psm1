@@ -1,3 +1,19 @@
+<#
+.SYNOPSIS
+    Creates a new dynamic parameter for either the resource list or definitionslist inside of v1.json.
+.DESCRIPTION
+    Creates a new dynamic parameter for either the resource list or definitionslist inside of v1.json by opening the file, reading the contents and converting a custom object.
+    this returns the used array. Definitons might be removed in future releases.
+.EXAMPLE
+    PS C:\> New-ResourceDynamicParameter -Parametertype "Resource"
+    Creates
+.INPUTS
+    -Parametertype: Resource or Definitions
+.OUTPUTS
+    none
+.NOTES
+    Function might be changed at release of new API.
+#>
 function New-ResourceDynamicParameter
 (
     [Parameter(Mandatory = $true)][string]$ParameterType
@@ -37,7 +53,37 @@ function New-ResourceDynamicParameter
     return $RuntimeParameterDictionary
 }
 
-
+<#
+.SYNOPSIS
+    Sets the current API URL
+.DESCRIPTION
+ Sets the API URL to the selected URL. URLs parameters can be tab-completed.
+.EXAMPLE
+    PS C:\> Add-AutotaskBaseURI -BaseURI https://webservices2.autotask.net/atservicesrest
+    Sets the autotask BaseURI to https://webservices2.autotask.net/atservicesrest
+.INPUTS
+    -BaseURI: one of the following list:
+        "https://webservices2.autotask.net/atservicesrest",
+        "https://webservices11.autotask.net/atservicesrest",
+        "https://webservices1.autotask.net/atservicesrest",
+        "https://webservices17.autotask.net/atservicesrest",
+        "https://webservices3.autotask.net/atservicesrest",
+        "https://webservices14.autotask.net/atservicesrest",
+        "https://webservices5.autotask.net/atservicesrest",
+        "https://webservices15.autotask.net/atservicesrest",
+        "https://webservices4.autotask.net/atservicesrest",
+        "https://webservices16.autotask.net/atservicesrest",
+        "https://webservices6.autotask.net/atservicesrest",
+        "https://prde.autotask.net/atservicesrest",
+        "https://pres.autotask.net/atservicesrest",
+        "https://webservices18.autotask.net/atservicesrest",
+        "https://webservices19.autotask.net/atservicesrest",
+        "https://webservices12.autotask.net/atservicesrest"
+.OUTPUTS
+    none
+.NOTES
+    Function might be changed at release of new API.
+#>
 function Add-AutotaskBaseURI (
     [ValidateSet(
         "https://webservices2.autotask.net/atservicesrest",
@@ -60,11 +106,27 @@ function Add-AutotaskBaseURI (
 ) {
     $Global:AutotaskBaseURI = "$($BaseURI)/v1.0"
 }
-
+<#
+.SYNOPSIS
+    Sets the API authentication information.
+.DESCRIPTION
+ Sets the API Authentication headers, and automatically tries to find the correct URL based on your username.
+.EXAMPLE
+    PS C:\> Add-AutotaskAPIAuth -ApiIntegrationcode 'ABCDEFGH00100244MMEEE333' -credentials $Creds
+    Creates header information for Autotask API.
+.INPUTS
+    -ApiIntegrationcode: The API Integration code found in Autotask
+    -Credentials : The API user credentials
+.OUTPUTS
+    none
+.NOTES
+    Function might be changed at release of new API.
+#>
 function Add-AutotaskAPIAuth (
     [Parameter(Mandatory = $true)]$ApiIntegrationcode,
     [Parameter(Mandatory = $true)][PSCredential]$credentials
 ) {
+    #We convert the securestring...back to a normal string :'( Why basic auth AT? why?!
     $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($credentials.Password)
     $Secret = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
     $Global:AutotaskAuthHeader = @{
@@ -86,7 +148,26 @@ function Add-AutotaskAPIAuth (
     }
 
 }
+<#
+.SYNOPSIS
+    Sets a resource in the API to the supplied object.
+.DESCRIPTION
+ Sets a resource in the API to the supplied object. Uses the Patch method. Each item in the object will be overwritten at the API side. Null values will overwrite with null values.
+.EXAMPLE
+    PS C:\>  Get-AutotaskAPIResource -resource Companies -ID 1234
+    Finds the company with 1234 in the Autotask REST API.
 
+    PS C:\>  Get-AutotaskAPIResource -resource Companies -SearchQuery={filter='active -eq true'}
+    Finds all companies which are active.
+.INPUTS
+    -Resource: Which resource to find. Tab completion is available.
+    -ID: ID of the resource you want to retrieve
+    -SearchQuery: JSON Search filter.
+.OUTPUTS
+    none
+.NOTES
+    Function might be changed at release of new API.
+#>
 function Get-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
@@ -119,7 +200,26 @@ function Get-AutotaskAPIResource {
     }
 }
 
+<#
+.SYNOPSIS
+    Sets a resource in the API to the supplied object.
+.DESCRIPTION
+ Sets a resource in the API to the supplied object. Uses the Patch method. Each item in the object will be overwritten at the API side. Null values will overwrite with null values.
+.EXAMPLE
+    PS C:\>  Get-AutotaskAPIResource -resource Companies -ID 1234
+    Finds the company with 1234 in the Autotask REST API.
 
+    PS C:\>  Get-AutotaskAPIResource -resource Companies -SearchQuery={filter='active -eq true'}
+    Finds all companies which are active.
+.INPUTS
+    -Resource: Which resource to find. Tab completion is available.
+    -ID: ID of the resource you want to retrieve
+    -SearchQuery: JSON Search filter.
+.OUTPUTS
+    none
+.NOTES
+    Function might be changed at release of new API.
+#>
 function New-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
@@ -149,7 +249,26 @@ function New-AutotaskAPIResource {
 
     }
 }
+<#
+.SYNOPSIS
+    Sets a resource in the API to the supplied object.
+.DESCRIPTION
+ Sets a resource in the API to the supplied object. Uses the Patch method. Each item in the object will be overwritten at the API side. Null values will overwrite with null values.
+.EXAMPLE
+    PS C:\>  Get-AutotaskAPIResource -resource Companies -ID 1234
+    Finds the company with 1234 in the Autotask REST API.
 
+    PS C:\>  Get-AutotaskAPIResource -resource Companies -SearchQuery={filter='active -eq true'}
+    Finds all companies which are active.
+.INPUTS
+    -Resource: Which resource to find. Tab completion is available.
+    -ID: ID of the resource you want to retrieve
+    -SearchQuery: JSON Search filter.
+.OUTPUTS
+    none
+.NOTES
+    Function might be changed at release of new API.
+#>
 function Set-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
@@ -180,7 +299,26 @@ function Set-AutotaskAPIResource {
     }
 }
 
+<#
+.SYNOPSIS
+    Creates a pscustomobject to send to api
+.DESCRIPTION
+  Creates a pscustomobject to send to api. Uses Models in V1.JSON
+  
+.EXAMPLE
+    PS C:\>  $body = New-AutotaskBody  -Definitions CompanyModel
+    Creates a new object in $Body with the companymodel, filled with expected content(e.g. int, string, boolean)
 
+    PS C:\> $body = New-AutotaskBody  -Definitions CompanyModel -NoContent
+    Creates a new, empty object in $Body with the companymodel,
+.INPUTS
+    -NoContent Creates and empty object.
+    -Definitions tab completed model to use.
+.OUTPUTS
+    none
+.NOTES
+    Function might be changed at release of new API.
+#>
 function New-AutotaskBody {
     [CmdletBinding()]
     Param(
