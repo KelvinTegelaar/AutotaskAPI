@@ -90,7 +90,7 @@ function Add-AutotaskAPIAuth (
 function Get-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(ParameterSetName = 'ID', Mandatory = $true,ValueFromPipelineByPropertyName = $true)][String]$ID,
+        [Parameter(ParameterSetName = 'ID', Mandatory = $true, ValueFromPipelineByPropertyName = $true)][String]$ID,
         [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $true)][String]$SearchQuery
     )
     DynamicParam {
@@ -103,11 +103,12 @@ function Get-AutotaskAPIResource {
         }
         $resource = $PSBoundParameters.resource
         $headers = $Global:AutotaskAuthHeader
+
+    }
+    process {
+        
         if ($ID) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" }
         if ($SearchQuery) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
-    }
-
-    process {
         try {
             Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
         }
@@ -122,7 +123,7 @@ function Get-AutotaskAPIResource {
 function New-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true,ValueFromPipelineByPropertyName = $true)]$Body
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$Body
     )
     DynamicParam {
         New-ResourceDynamicParameter -ParameterType Resource
@@ -135,14 +136,12 @@ function New-AutotaskAPIResource {
         $resource = $PSBoundParameters.resource
         $headers = $Global:AutotaskAuthHeader
 
-        $SetURI = "$($Global:AutotaskBaseURI)/$($resource)" 
-
-        $SendingBody = $body | ConvertTo-Json -Depth 10
     }
     
     process {
+        $SendingBody = $body | ConvertTo-Json -Depth 10
         try {
-            Invoke-RestMethod -Uri $SetURI -headers $Headers -Method post -Body $SendingBody
+            Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)"  -headers $Headers -Method post -Body $SendingBody
         }
         catch {
             write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
@@ -155,7 +154,7 @@ function Set-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory = $true)]$Body,
-        [Parameter(Mandatory = $true,ValueFromPipelineByPropertyName = $true)]$ID
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$ID
     )
     DynamicParam {
         New-ResourceDynamicParameter -ParameterType 'Resource'
@@ -166,14 +165,13 @@ function Set-AutotaskAPIResource {
             break 
         }
         $resource = $PSBoundParameters.resource
-        $headers = $Global:AutotaskAuthHeader
-        $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID"          
+        $headers = $Global:AutotaskAuthHeader     
         $SendingBody = $body | ConvertTo-Json -Depth 10
     }
     
     process {
         try {
-            Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Patch -Body $SendingBody
+            Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)/$ID" -headers $Headers -Method Patch -Body $SendingBody
         }
         catch {
             write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
