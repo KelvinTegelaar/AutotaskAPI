@@ -63,19 +63,20 @@ function Add-AutotaskBaseURI (
 
 function Add-AutotaskAPIAuth (
     [Parameter(Mandatory = $true)]$ApiIntegrationcode,
-    [Parameter(Mandatory = $true)]$username,
-    [Parameter(Mandatory = $true)]$secret
+    [Parameter(Mandatory = $true)][PSCredential]$credentials
 ) {
+    $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($credentials.Password)
+    $Secret = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
     $Global:AutotaskAuthHeader = @{
         'ApiIntegrationcode' = $ApiIntegrationcode
-        'UserName'           = $username
+        'UserName'           = $credentials.UserName
         'Secret'             = $secret
         'ContentType'        = 'application/json'
     }
     write-host "Retrieving webservices URI based on username" -ForegroundColor Green
     try {
         $AutotaskBaseURI = Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/v1.0/zoneInformation?user=$($Global:AutotaskAuthHeader.UserName)"
-        #Little hacky, but rest api current returns double slashes everywhere.
+        #Little hacky, but rest api current returns double slashes.
         $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A", "/A"
         Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url
         write-host "Set AutotaskBaseURI to $($AutotaskBaseURI.url) " -ForegroundColor green
@@ -89,8 +90,8 @@ function Add-AutotaskAPIAuth (
 function Get-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(ParameterSetName='ID',Mandatory = $true)][String]$ID,
-        [Parameter(ParameterSetName='SearchQuery',Mandatory = $true)][String]$SearchQuery
+        [Parameter(ParameterSetName = 'ID', Mandatory = $true)][String]$ID,
+        [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $true)][String]$SearchQuery
     )
     DynamicParam {
         New-ResourceDynamicParameter -ParameterType resource
@@ -134,7 +135,7 @@ function New-AutotaskAPIResource {
         $resource = $PSBoundParameters.resource
         $headers = $Global:AutotaskAuthHeader
 
-            $SetURI = "$($Global:AutotaskBaseURI)/$($resource)" 
+        $SetURI = "$($Global:AutotaskBaseURI)/$($resource)" 
 
         $SendingBody = $body | ConvertTo-Json -Depth 10
     }
