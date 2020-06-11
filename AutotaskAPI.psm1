@@ -38,12 +38,11 @@ function New-ResourceDynamicParameter
             $resource
         }
     }
-    
+    #Disabled as it might no longer be required.
     if ($($ParameterType) -eq "Definitions") {
         $ResourceList = foreach ($Path in $swagger.definitions.psobject.Properties) {
             $path.Name
         }
-    
     }
     
     $ValidateSetAttribute = New-Object System.Management.Automation.ValidateSetAttribute($ResourceList)
@@ -327,7 +326,7 @@ function New-AutotaskBody {
         [Parameter(Mandatory = $false)][switch]$NoContent
     )
     DynamicParam {
-        New-ResourceDynamicParameter -ParameterType "Definitions"
+        New-ResourceDynamicParameter -ParameterType "Resource"
     }
     begin {
         if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
@@ -338,16 +337,8 @@ function New-AutotaskBody {
     }
     process {
         try {
-            $Swagger = get-content "$($PSScriptRoot)\v1.json" -raw | ConvertFrom-Json
-            $DefinitionsList = foreach ($Path in $swagger.definitions.psobject.Properties) {
-                [PSCustomObject]@{
-                    Name  = $path.Name
-                    Value = $path.value
-                }
-              
-            }
-            $ObjectTemplate = ($DefinitionsList | Where-Object { $_.Name -eq $Definitions }).value.Properties
-            if (!$ObjectTemplate) { 
+            $ReturnedDef = Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)/entityInformation/fields" -headers $Headers -Method Get
+            if (!$ReturnedDef) { 
                 Write-Warning "No object template found for this definition: $Definitions" 
             }
             else {
