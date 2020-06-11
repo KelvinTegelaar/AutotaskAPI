@@ -38,12 +38,7 @@ function New-ResourceDynamicParameter
             $resource
         }
     }
-    #Disabled as it might no longer be required.
-    if ($($ParameterType) -eq "Definitions") {
-        $ResourceList = foreach ($Path in $swagger.definitions.psobject.Properties) {
-            $path.Name
-        }
-    }
+
     
     $ValidateSetAttribute = New-Object System.Management.Automation.ValidateSetAttribute($ResourceList)
     $AttributeCollection.Add($ValidateSetAttribute)
