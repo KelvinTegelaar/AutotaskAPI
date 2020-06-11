@@ -82,7 +82,7 @@ function New-ResourceDynamicParameter
 .OUTPUTS
     none
 .NOTES
-    Function might be changed at release of new API.
+    To-do: 
 #>
 function Add-AutotaskBaseURI (
     [ValidateSet(
@@ -102,9 +102,10 @@ function Add-AutotaskBaseURI (
         "https://webservices18.autotask.net/atservicesrest",
         "https://webservices19.autotask.net/atservicesrest",
         "https://webservices12.autotask.net/atservicesrest")]
-    [Parameter(Mandatory = $true)]$BaseURI
+    [Parameter(Mandatory = $true)]$BaseURI,
+    [Parameter(Mandatory = $true)]$Version
 ) {
-    $Global:AutotaskBaseURI = "$($BaseURI)/v1.0"
+    $Global:AutotaskBaseURI = "$($BaseURI)/$($Version)"
 }
 <#
 .SYNOPSIS
@@ -137,14 +138,15 @@ function Add-AutotaskAPIAuth (
     }
     write-host "Retrieving webservices URI based on username" -ForegroundColor Green
     try {
-        $AutotaskBaseURI = Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/v1.0/zoneInformation?user=$($Global:AutotaskAuthHeader.UserName)"
+        $Version = (Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/versioninformation").apiversions | select-object -last 1
+        $AutotaskBaseURI = Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/$($Version)/zoneInformation?user=$($Global:AutotaskAuthHeader.UserName)"
         #Little hacky, but rest api current returns double slashes.
         $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A", "/A"
-        Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url
-        write-host "Set AutotaskBaseURI to $($AutotaskBaseURI.url) " -ForegroundColor green
+        write-host "Setting AutotaskBaseURI to $($AutotaskBaseURI.url) using version $Version" -ForegroundColor green
+        Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url -Version $Version
     }
     catch {
-        write-host "Could not automatically determine webservices URI. Please run Add-AutotaskBaseURI" -ForegroundColor red
+        write-host "Could not Retrieve baseuri. E-mail address might be incorrect. You can manually add the baseuri via the Add-AutotaskBaseURI cmdlet. " -ForegroundColor red
     }
 
 }
@@ -167,7 +169,7 @@ function Add-AutotaskAPIAuth (
 .OUTPUTS
     none
 .NOTES
-    Function might be changed at release of new API.
+    TODO: Turns out some items have child URLS. figure that out.
 #>
 function Get-AutotaskAPIResource {
     [CmdletBinding()]
@@ -217,7 +219,8 @@ function Get-AutotaskAPIResource {
 .OUTPUTS
     none
 .NOTES
-    Function might be changed at release of new API.
+    So the API actually contains a method to get the fields for a body. Thinking of using that instead. 
+    /atservicesrest/v1.0/EntityName/entityInformation/field
 #>
 function New-AutotaskAPIResource {
     [CmdletBinding()]
