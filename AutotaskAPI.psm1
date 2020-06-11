@@ -97,6 +97,9 @@ function Add-AutotaskBaseURI (
         "https://webservices19.autotask.net/atservicesrest",
         "https://webservices12.autotask.net/atservicesrest")]
     [Parameter(Mandatory = $true)]$BaseURI,
+    [ValidateSet(
+        "V1.0",
+        "Beta")]
     [Parameter(Mandatory = $true)]$Version
 ) {
     $Global:AutotaskBaseURI = "$($BaseURI)/$($Version)"
