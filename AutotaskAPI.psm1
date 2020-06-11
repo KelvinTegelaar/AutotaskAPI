@@ -150,19 +150,20 @@ function Add-AutotaskAPIAuth (
 }
 <#
 .SYNOPSIS
-    Sets a resource in the API to the supplied object.
+    Gets a specified resource in the API.
 .DESCRIPTION
- Sets a resource in the API to the supplied object. Uses the Patch method. Each item in the object will be overwritten at the API side. Null values will overwrite with null values.
+    Gets a specified resource in the API. retrieves data based either on ID or specific JSON query.
 .EXAMPLE
-    PS C:\>  Get-AutotaskAPIResource -resource Companies -ID 1234
-    Finds the company with 1234 in the Autotask REST API.
+    PS C:\>  Get-AutotaskAPIResource -resource Companies -id 1234 -verbose
+    Gets the company with ID 1234
 
-    PS C:\>  Get-AutotaskAPIResource -resource Companies -SearchQuery={filter='active -eq true'}
-    Finds all companies which are active.
+    Get-AutotaskAPIResource -resource Companies -SearchQuery "{filter='active -eq True'}"
+    Gets all companies with the filter "Active = true"
+
 .INPUTS
-    -Resource: Which resource to find. Tab completion is available.
-    -ID: ID of the resource you want to retrieve
-    -SearchQuery: JSON Search filter.
+    -ID: Search by Autotask ID. Accept pipeline input.
+    -SearchQuery: JSON search filter.
+   
 .OUTPUTS
     none
 .NOTES
@@ -202,19 +203,17 @@ function Get-AutotaskAPIResource {
 
 <#
 .SYNOPSIS
-    Sets a resource in the API to the supplied object.
+    Creates a new resource in the API to the supplied object.
 .DESCRIPTION
- Sets a resource in the API to the supplied object. Uses the Patch method. Each item in the object will be overwritten at the API side. Null values will overwrite with null values.
+ Creates resource in the API to the supplied object. Uses the Post method.  Null values will not be published.
 .EXAMPLE
-    PS C:\>  Get-AutotaskAPIResource -resource Companies -ID 1234
-    Finds the company with 1234 in the Autotask REST API.
+    PS C:\>  New-AutotaskAPIResource -resource companies -body $body
+    Creates a new company using the body $body
 
-    PS C:\>  Get-AutotaskAPIResource -resource Companies -SearchQuery={filter='active -eq true'}
-    Finds all companies which are active.
 .INPUTS
     -Resource: Which resource to find. Tab completion is available.
-    -ID: ID of the resource you want to retrieve
-    -SearchQuery: JSON Search filter.
+    -Body: Body created based on the model of the API.  Accepts pipeline input.
+   
 .OUTPUTS
     none
 .NOTES
