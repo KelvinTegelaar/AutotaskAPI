@@ -172,7 +172,8 @@ function Get-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
         [Parameter(ParameterSetName = 'ID', Mandatory = $true, ValueFromPipelineByPropertyName = $true)][String]$ID,
-        [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $true)][String]$SearchQuery
+        [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $true)][String]$SearchQuery,
+        [Parameter(ParameterSetName = 'SimpleSearch', Mandatory = $true)][String]$SimpleSearch
     )
     DynamicParam {
         New-ResourceDynamicParameter -ParameterType resource
@@ -192,6 +193,57 @@ function Get-AutotaskAPIResource {
         if ($SearchQuery) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
         try {
             Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
+        }
+        catch {
+            write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
+        }
+
+    }
+}
+
+<#
+.SYNOPSIS
+Deletes a resource in the API to the supplied object.
+.DESCRIPTION
+ Deletes a resource in the API to the supplied object. Uses the DELETE method. Each item in the object will be removed. Confirmation will be required.
+.EXAMPLE
+    PS C:\>  Remove-AutotaskAPIResource -resource Companies -ID 1234
+    Deletes the company with ID 1234
+
+.INPUTS
+    -ID: ID of the resource you want to delete
+.OUTPUTS
+    none
+.NOTES
+    Function might be changed at release of new API.
+#>
+function Remove-AutotaskAPIResource {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)][boolean]$confirm,
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$ID
+    )
+    DynamicParam {
+        New-ResourceDynamicParameter -ParameterType 'Resource'
+    }
+    begin {
+        if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
+            Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
+            break 
+        }
+        $resource = $PSBoundParameters.resource
+        $headers = $Global:AutotaskAuthHeader     
+    }
+    
+    
+    process {
+        try {
+            if ($confirm -eq $true) {
+                Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)/$ID" -headers $Headers -Method Delete
+            }
+            else {
+                write-host "You must set confirm to `$True to execute a deletion."
+            }
         }
         catch {
             write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
@@ -240,7 +292,7 @@ function New-AutotaskAPIResource {
     process {
         $SendingBody = $body | ConvertTo-Json -Depth 10
         try {
-            Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)"  -headers $Headers -Method post -Body $SendingBody
+            Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)$($resource)"  -headers $Headers -Method post -Body $SendingBody
         }
         catch {
             write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
@@ -289,7 +341,7 @@ function Set-AutotaskAPIResource {
     
     process {
         try {
-            Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)/$ID" -headers $Headers -Method Patch -Body $SendingBody
+            Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)$($resource)/$ID" -headers $Headers -Method Patch -Body $SendingBody
         }
         catch {
             write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
@@ -305,14 +357,14 @@ function Set-AutotaskAPIResource {
   Creates a pscustomobject to send to api. Uses Models in V1.JSON
   
 .EXAMPLE
-    PS C:\>  $body = New-AutotaskBody  -Definitions CompanyModel
+    PS C:\>  $body = New-AutotaskBody  -Resource CompanyModel
     Creates a new object in $Body with the companymodel, filled with expected content(e.g. int, string, boolean)
 
-    PS C:\> $body = New-AutotaskBody  -Definitions CompanyModel -NoContent
+    PS C:\> $body = New-AutotaskBody  -Resource CompanyModel -NoContent
     Creates a new, empty object in $Body with the companymodel,
 .INPUTS
-    -NoContent Creates and empty object.
-    -Definitions tab completed model to use.
+    -NoContent Creates an empty object.
+    -Resource tab completed model to use.
 .OUTPUTS
     none
 .NOTES
@@ -331,26 +383,32 @@ function New-AutotaskBody {
             Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
             break 
         }
-        $Definitions = $PSBoundParameters.Definitions
+        
+        $Headers = $Global:AutotaskAuthHeader
     }
     process {
         try {
-            $ReturnedDef = Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)/entityInformation/fields" -headers $Headers -Method Get
-            if (!$ReturnedDef) { 
+            $resource = $PSBoundParameters.resource
+            $ObjectTemplate = (Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)/entityInformation/fields" -headers $Headers -Method Get).fields
+            if (!$ObjectTemplate) { 
                 Write-Warning "No object template found for this definition: $Definitions" 
             }
             else {
                 if ($NoContent) { 
-                    foreach ($prop in $ObjectTemplate.psobject.Properties.Name) { 
-                        $ObjectTemplate.$prop = $null 
+                    $ReturnedDef = [pscustomobject]
+                    foreach ($prop in $ObjectTemplate.Name) { 
+                        $ReturnedDef | Add-Member -NotePropertyName $prop -NotePropertyValue ' ' -Force
                     }
-                    $ReturnedDef = $ObjectTemplate 
+                    
                 }
                 if (!$NoContent) {
-                    $ReturnedDef = $ObjectTemplate
+                    $ReturnedDef = [pscustomobject]
+                    foreach ($prop in $ObjectTemplate) { 
+                        $ReturnedDef | Add-Member -NotePropertyName $prop.name -NotePropertyValue @("DataType:$($prop.datatype)", "Required:$($prop.isRequired)", $($prop.picklistValues | Out-String)) -Force
+                    }
                 }
             }
-            return $ReturnedDef
+            return $ReturnedDef | select-object $ObjectTemplate.name
 
         }
         catch {
