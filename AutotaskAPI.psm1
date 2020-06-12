@@ -185,20 +185,31 @@ function Get-AutotaskAPIResource {
         }
         $resource = $PSBoundParameters.resource
         $headers = $Global:AutotaskAuthHeader
-
+        if ($SimpleSearch) {
+            $SearchOps = $SimpleSearch -split ' '
+            $SearchQuery = convertto-json @{
+                filter = @(@{
+                        field = $SearchOps[0]
+                        op    = $SearchOps[1]
+                        value = $SearchOps[2]
+                    })
+            } -Compress
+            
+        }
     }
-    process {
+
+process {
         
-        if ($ID) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" }
-        if ($SearchQuery) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
-        try {
-            Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
-        }
-        catch {
-            write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
-        }
-
+    if ($ID) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" }
+    if ($SearchQuery) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
+    try {
+        Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
     }
+    catch {
+        write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
+    }
+
+}
 }
 
 <#
@@ -323,8 +334,7 @@ function New-AutotaskAPIResource {
 function Set-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true)]$Body,
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$ID
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$body
     )
     DynamicParam {
         New-ResourceDynamicParameter -ParameterType 'Resource'
@@ -336,12 +346,13 @@ function Set-AutotaskAPIResource {
         }
         $resource = $PSBoundParameters.resource
         $headers = $Global:AutotaskAuthHeader     
-        $SendingBody = $body | ConvertTo-Json -Depth 10
+        
     }
     
     process {
         try {
-            Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)$($resource)/$ID" -headers $Headers -Method Patch -Body $SendingBody
+            $SendingBody = $PSBoundParameters.body | ConvertTo-Json -Depth 10
+            Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)" -headers $Headers -Body $SendingBody -Method Patch
         }
         catch {
             write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
