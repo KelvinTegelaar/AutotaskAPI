@@ -162,6 +162,7 @@ function Add-AutotaskAPIAuth (
 .INPUTS
     -ID: Search by Autotask ID. Accept pipeline input.
     -SearchQuery: JSON search filter.
+    -SimpleSearch: a simple search filter, e.g. name eq Lime
    
 .OUTPUTS
     none
@@ -198,18 +199,23 @@ function Get-AutotaskAPIResource {
         }
     }
 
-process {
+    process {
         
-    if ($ID) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" }
-    if ($SearchQuery) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
-    try {
-        Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
-    }
-    catch {
-        write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
-    }
+        if ($ID) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" }
+        if ($SearchQuery) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
+        try {
+        do {
+                $items = Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
+                $SetURI = $items.PageDetails.NextPageUrl 
+                $items.items
+                $items.Item     
+            } while ($null -ne $SetURI)
+        }
+        catch {
+            write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
+        }
 
-}
+    }
 }
 
 <#
