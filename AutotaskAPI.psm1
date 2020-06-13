@@ -102,7 +102,7 @@ function Add-AutotaskBaseURI (
         "Beta")]
     [Parameter(Mandatory = $true)]$Version
 ) {
-    $Global:AutotaskBaseURI = "$($BaseURI)/$($Version)"
+    $Script:AutotaskBaseURI = "$($BaseURI)/$($Version)"
 }
 <#
 .SYNOPSIS
@@ -127,7 +127,7 @@ function Add-AutotaskAPIAuth (
     #We convert the securestring...back to a normal string :'( Why basic auth AT? why?!
     $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($credentials.Password)
     $Secret = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-    $Global:AutotaskAuthHeader = @{
+    $Script:AutotaskAuthHeader = @{
         'ApiIntegrationcode' = $ApiIntegrationcode
         'UserName'           = $credentials.UserName
         'Secret'             = $secret
@@ -136,12 +136,12 @@ function Add-AutotaskAPIAuth (
     write-host "Retrieving webservices URI based on username" -ForegroundColor Green
     try {
         $Version = (Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/versioninformation").apiversions | select-object -last 1
-        $AutotaskBaseURI = Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/$($Version)/zoneInformation?user=$($Global:AutotaskAuthHeader.UserName)"
+        $AutotaskBaseURI = Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/$($Version)/zoneInformation?user=$($Script:AutotaskAuthHeader.UserName)"
         #Little hacky, but rest api current returns double slashes.
         $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A", "/A"
         write-host "Setting AutotaskBaseURI to $($AutotaskBaseURI.url) using version $Version" -ForegroundColor green
         Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url -Version $Version
-        $Global:ResourceParameter = New-ResourceDynamicParameter -Parametertype "Resource"
+        $Script:ResourceParameter = New-ResourceDynamicParameter -Parametertype "Resource"
     }
     catch {
         write-host "Could not Retrieve baseuri. E-mail address might be incorrect. You can manually add the baseuri via the Add-AutotaskBaseURI cmdlet. " -ForegroundColor red
@@ -178,15 +178,15 @@ function Get-AutotaskAPIResource {
         [Parameter(ParameterSetName = 'SimpleSearch', Mandatory = $true)][String]$SimpleSearch
     )
     DynamicParam {
-        $Global:ResourceParameter
+        $Script:ResourceParameter
     }
     begin {
-        if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
+        if (!$Script:AutotaskAuthHeader -or !$Script:AutotaskBaseURI) {
             Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
             break 
         }
         $resource = $PSBoundParameters.resource
-        $headers = $Global:AutotaskAuthHeader
+        $headers = $Script:AutotaskAuthHeader
         if ($SimpleSearch) {
             $SearchOps = $SimpleSearch -split ' '
             $SearchQuery = convertto-json @{
@@ -202,8 +202,8 @@ function Get-AutotaskAPIResource {
 
     process {
         
-        if ($ID) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" }
-        if ($SearchQuery) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
+        if ($ID) { $SetURI = "$($Script:AutotaskBaseURI)/$($resource)/$ID" }
+        if ($SearchQuery) { $SetURI = "$($Script:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
         try {
             do {
                 $items = Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
@@ -251,22 +251,22 @@ function Remove-AutotaskAPIResource {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$ID
     )
     DynamicParam {
-        $Global:ResourceParameter
+        $Script:ResourceParameter
     }
     begin {
-        if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
+        if (!$Script:AutotaskAuthHeader -or !$Script:AutotaskBaseURI) {
             Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
             break 
         }
         $resource = $PSBoundParameters.resource
-        $headers = $Global:AutotaskAuthHeader     
+        $headers = $Script:AutotaskAuthHeader     
     }
     
     
     process {
         try {
             if ($confirm -eq $true) {
-                Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)/$ID" -headers $Headers -Method Delete
+                Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resource)/$ID" -headers $Headers -Method Delete
             }
             else {
                 write-host "You must set confirm to `$True to execute a deletion."
@@ -313,22 +313,22 @@ function New-AutotaskAPIResource {
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]$Body
     )
     DynamicParam {
-        $Global:ResourceParameter
+        $Script:ResourceParameter
     }
     begin {
-        if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
+        if (!$Script:AutotaskAuthHeader -or !$Script:AutotaskBaseURI) {
             Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
             break 
         }
         $resource = $PSBoundParameters.resource
-        $headers = $Global:AutotaskAuthHeader
+        $headers = $Script:AutotaskAuthHeader
 
     }
     
     process {
         $SendingBody = $body | ConvertTo-Json -Depth 10
         try {
-            Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)"  -headers $Headers -Method post -Body $SendingBody
+            Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resource)"  -headers $Headers -Method post -Body $SendingBody
         }
         catch {
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
@@ -370,22 +370,22 @@ function Set-AutotaskAPIResource {
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]$body
     )
     DynamicParam {
-        $Global:ResourceParameter
+        $Script:ResourceParameter
     }
     begin {
-        if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
+        if (!$Script:AutotaskAuthHeader -or !$Script:AutotaskBaseURI) {
             Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
             break 
         }
         $resource = $PSBoundParameters.resource
-        $headers = $Global:AutotaskAuthHeader     
+        $headers = $Script:AutotaskAuthHeader     
         
     }
     
     process {
         try {
             $SendingBody = $PSBoundParameters.body | ConvertTo-Json -Depth 10
-            Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)" -headers $Headers -Body $SendingBody -Method Patch
+            Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resource)" -headers $Headers -Body $SendingBody -Method Patch
         }
         catch {
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
@@ -429,20 +429,20 @@ function New-AutotaskBody {
         [Parameter(Mandatory = $false)][switch]$NoContent
     )
     DynamicParam {
-        $Global:ResourceParameter
+        $Script:ResourceParameter
     }
     begin {
-        if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
+        if (!$Script:AutotaskAuthHeader -or !$Script:AutotaskBaseURI) {
             Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
             break 
         }
         
-        $Headers = $Global:AutotaskAuthHeader
+        $Headers = $Script:AutotaskAuthHeader
     }
     process {
         try {
             $resource = $PSBoundParameters.resource
-            $ObjectTemplate = (Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)/entityInformation/fields" -headers $Headers -Method Get).fields
+            $ObjectTemplate = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resource)/entityInformation/fields" -headers $Headers -Method Get).fields
             if (!$ObjectTemplate) { 
                 Write-Warning "No object template found for this definition: $Definitions" 
             }
