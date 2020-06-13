@@ -25,7 +25,7 @@ function New-ResourceDynamicParameter
     $ParameterAttribute.Mandatory = $true
     $AttributeCollection.Add($ParameterAttribute)
     
-    $Swagger = get-content "$($PSScriptRoot)\v1.json" -raw | ConvertFrom-Json
+    $Swagger = get-content "$($MyInvocation.MyCommand.Module.ModuleBase)\v1.json" -raw | ConvertFrom-Json
     $Queries = foreach ($Path in $swagger.paths.psobject.Properties) {
         [PSCustomObject]@{
             Name  = $path.Name
@@ -141,6 +141,7 @@ function Add-AutotaskAPIAuth (
         $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A", "/A"
         write-host "Setting AutotaskBaseURI to $($AutotaskBaseURI.url) using version $Version" -ForegroundColor green
         Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url -Version $Version
+        $Global:ResourceParameter = New-ResourceDynamicParameter -Parametertype "Resource"
     }
     catch {
         write-host "Could not Retrieve baseuri. E-mail address might be incorrect. You can manually add the baseuri via the Add-AutotaskBaseURI cmdlet. " -ForegroundColor red
@@ -177,7 +178,7 @@ function Get-AutotaskAPIResource {
         [Parameter(ParameterSetName = 'SimpleSearch', Mandatory = $true)][String]$SimpleSearch
     )
     DynamicParam {
-        New-ResourceDynamicParameter -ParameterType resource
+        $Global:ResourceParameter
     }
     begin {
         if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
@@ -204,7 +205,7 @@ function Get-AutotaskAPIResource {
         if ($ID) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/$ID" }
         if ($SearchQuery) { $SetURI = "$($Global:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
         try {
-        do {
+            do {
                 $items = Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
                 $SetURI = $items.PageDetails.NextPageUrl 
                 $items.items
@@ -241,7 +242,7 @@ function Remove-AutotaskAPIResource {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$ID
     )
     DynamicParam {
-        New-ResourceDynamicParameter -ParameterType 'Resource'
+        $Global:ResourceParameter
     }
     begin {
         if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
@@ -294,7 +295,7 @@ function New-AutotaskAPIResource {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$Body
     )
     DynamicParam {
-        New-ResourceDynamicParameter -ParameterType Resource
+        $Global:ResourceParameter
     }
     begin {
         if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
@@ -343,7 +344,7 @@ function Set-AutotaskAPIResource {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$body
     )
     DynamicParam {
-        New-ResourceDynamicParameter -ParameterType 'Resource'
+        $Global:ResourceParameter
     }
     begin {
         if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
@@ -393,7 +394,7 @@ function New-AutotaskBody {
         [Parameter(Mandatory = $false)][switch]$NoContent
     )
     DynamicParam {
-        New-ResourceDynamicParameter -ParameterType "Resource"
+        $Global:ResourceParameter
     }
     begin {
         if (!$Global:AutotaskAuthHeader -or !$Global:AutotaskBaseURI) {
