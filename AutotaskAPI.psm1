@@ -213,7 +213,16 @@ function Get-AutotaskAPIResource {
             } while ($null -ne $SetURI)
         }
         catch {
-            write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
+            $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
+            $streamReader.BaseStream.Position = 0
+            $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json
+            $streamReader.Close()
+            if ($ErrResp.errors) { 
+                write-error "API Error: $($ErrResp.errors)" 
+            }
+            else {
+                write-error "Connecting to the Autotask API failed. $($ErrResp.errors)"
+            }
         }
 
     }
@@ -264,7 +273,16 @@ function Remove-AutotaskAPIResource {
             }
         }
         catch {
-            write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
+            $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
+            $streamReader.BaseStream.Position = 0
+            $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json
+            $streamReader.Close()
+            if ($ErrResp.errors) { 
+                write-error "API Error: $($ErrResp.errors)" 
+            }
+            else {
+                write-error "Connecting to the Autotask API failed. $($ErrResp.errors)"
+            }
         }
 
     }
@@ -313,9 +331,17 @@ function New-AutotaskAPIResource {
             Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)"  -headers $Headers -Method post -Body $SendingBody
         }
         catch {
-            write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
+            $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
+            $streamReader.BaseStream.Position = 0
+            $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json
+            $streamReader.Close()
+            if ($ErrResp.errors) { 
+                write-error "API Error: $($ErrResp.errors)" 
+            }
+            else {
+                write-error "Connecting to the Autotask API failed. $($ErrResp.errors)"
+            }
         }
-
     }
 }
 <#
@@ -341,7 +367,7 @@ function New-AutotaskAPIResource {
 function Set-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true, ValueFromPipeline= $true)]$body
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]$body
     )
     DynamicParam {
         $Global:ResourceParameter
@@ -362,7 +388,16 @@ function Set-AutotaskAPIResource {
             Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)" -headers $Headers -Body $SendingBody -Method Patch
         }
         catch {
-            write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
+            $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
+            $streamReader.BaseStream.Position = 0
+            $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json
+            $streamReader.Close()
+            if ($ErrResp.errors) { 
+                write-error "API Error: $($ErrResp.errors)" 
+            }
+            else {
+                write-error "Connecting to the Autotask API failed. $($ErrResp.errors)"
+            }
         }
 
     }
