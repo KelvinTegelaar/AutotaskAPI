@@ -141,7 +141,7 @@ function Add-AutotaskAPIAuth (
         $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A", "/A"
         write-host "Setting AutotaskBaseURI to $($AutotaskBaseURI.url) using version $Version" -ForegroundColor green
         Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url -Version $Version
-        $Global:ResourceP7arameter = New-ResourceDynamicParameter -Parametertype "Resource"
+        $Global:ResourceParameter = New-ResourceDynamicParameter -Parametertype "Resource"
     }
     catch {
         write-host "Could not Retrieve baseuri. E-mail address might be incorrect. You can manually add the baseuri via the Add-AutotaskBaseURI cmdlet. " -ForegroundColor red
