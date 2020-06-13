@@ -131,7 +131,7 @@ function Add-AutotaskAPIAuth (
         'ApiIntegrationcode' = $ApiIntegrationcode
         'UserName'           = $credentials.UserName
         'Secret'             = $secret
-        'ContentType'        = 'application/json'
+        'Content-Type'       = 'application/json'
     }
     write-host "Retrieving webservices URI based on username" -ForegroundColor Green
     try {
@@ -141,7 +141,7 @@ function Add-AutotaskAPIAuth (
         $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A", "/A"
         write-host "Setting AutotaskBaseURI to $($AutotaskBaseURI.url) using version $Version" -ForegroundColor green
         Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url -Version $Version
-        $Global:ResourceParameter = New-ResourceDynamicParameter -Parametertype "Resource"
+        $Global:ResourceP7arameter = New-ResourceDynamicParameter -Parametertype "Resource"
     }
     catch {
         write-host "Could not Retrieve baseuri. E-mail address might be incorrect. You can manually add the baseuri via the Add-AutotaskBaseURI cmdlet. " -ForegroundColor red
@@ -208,8 +208,8 @@ function Get-AutotaskAPIResource {
             do {
                 $items = Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
                 $SetURI = $items.PageDetails.NextPageUrl 
-                $items.items
-                $items.Item     
+                if ($items.items) { $items.items }
+                if ($items.item) { $items.item }  
             } while ($null -ne $SetURI)
         }
         catch {
@@ -292,7 +292,7 @@ function Remove-AutotaskAPIResource {
 function New-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$Body
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]$Body
     )
     DynamicParam {
         $Global:ResourceParameter
@@ -310,7 +310,7 @@ function New-AutotaskAPIResource {
     process {
         $SendingBody = $body | ConvertTo-Json -Depth 10
         try {
-            Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)$($resource)"  -headers $Headers -Method post -Body $SendingBody
+            Invoke-RestMethod -Uri "$($Global:AutotaskBaseURI)/$($resource)"  -headers $Headers -Method post -Body $SendingBody
         }
         catch {
             write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
@@ -341,7 +341,7 @@ function New-AutotaskAPIResource {
 function Set-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$body
+        [Parameter(Mandatory = $true, ValueFromPipeline= $true)]$body
     )
     DynamicParam {
         $Global:ResourceParameter
