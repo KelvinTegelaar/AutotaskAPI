@@ -18,28 +18,27 @@ function New-ResourceDynamicParameter
 (
     [Parameter(Mandatory = $true)][string]$ParameterType
 ) {
-    $ParameterName = "$($ParameterType)"
+    $ParameterName = "Resource"
     $RuntimeParameterDictionary = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
     $AttributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
     $ParameterAttribute = New-Object System.Management.Automation.ParameterAttribute
     $ParameterAttribute.Mandatory = $true
     $AttributeCollection.Add($ParameterAttribute)
-    
-    $Swagger = get-content "$($MyInvocation.MyCommand.Module.ModuleBase)\v1.json" -raw | ConvertFrom-Json
-    $Queries = foreach ($Path in $swagger.paths.psobject.Properties) {
+    if(!$Script:Swagger){ $Script:Swagger = get-content "$($MyInvocation.MyCommand.Module.ModuleBase)\v1.json" -raw | ConvertFrom-Json }
+    $Script:Queries = foreach ($Path in $Script:Swagger.paths.psobject.Properties) {
         [PSCustomObject]@{
-            Name  = $path.Name
-            Value = $path.value
+            Name   = $path.Name
+            Get    = $Path.value.get.tags
+            Post   = $Path.value.post.tags
+            Patch  = $Path.value.patch.tags
+            Delete = $Path.value.delete.tags
         }
     }
-    if ($($ParameterType) -eq "Resource") {
-        $ResourceList = foreach ($query in  $Queries | where-object { $_.name -like "*{id}*" }  ) {
-            $resource = ($query.name -split "/")[2]
-            $resource
-        }
+    $ResourceList = foreach ($query in  $Queries | where-object { $null -ne $_."$ParameterType" }  ) {
+        $resource = ($query.name -split "/")[2]
+        $resource
     }
 
-    
     $ValidateSetAttribute = New-Object System.Management.Automation.ValidateSetAttribute($ResourceList)
     $AttributeCollection.Add($ValidateSetAttribute)
     $RuntimeParameter = New-Object System.Management.Automation.RuntimeDefinedParameter($ParameterName, [string], $AttributeCollection)
@@ -137,11 +136,15 @@ function Add-AutotaskAPIAuth (
     try {
         $Version = (Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/versioninformation").apiversions | select-object -last 1
         $AutotaskBaseURI = Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/$($Version)/zoneInformation?user=$($Script:AutotaskAuthHeader.UserName)"
-        #Little hacky, but rest api current returns double slashes.
+        #Little hacky, but rest api current returns double slashes in the path.
         $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A", "/A"
         write-host "Setting AutotaskBaseURI to $($AutotaskBaseURI.url) using version $Version" -ForegroundColor green
         Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url -Version $Version
-        $Script:ResourceParameter = New-ResourceDynamicParameter -Parametertype "Resource"
+        write-host "Setting API resource parameters. This may take a moment." -ForegroundColor green
+        $Script:GetParameter = New-ResourceDynamicParameter -Parametertype "Get"
+        $Script:PatchParameter = New-ResourceDynamicParameter -Parametertype "Patch"
+        $Script:DeleteParameter = New-ResourceDynamicParameter -Parametertype "Delete"
+        $Script:POSTParameter = New-ResourceDynamicParameter -Parametertype "Post"
     }
     catch {
         write-host "Could not Retrieve baseuri. E-mail address might be incorrect. You can manually add the baseuri via the Add-AutotaskBaseURI cmdlet. " -ForegroundColor red
@@ -178,7 +181,7 @@ function Get-AutotaskAPIResource {
         [Parameter(ParameterSetName = 'SimpleSearch', Mandatory = $true)][String]$SimpleSearch
     )
     DynamicParam {
-        $Script:ResourceParameter
+        $Script:GetParameter
     }
     begin {
         if (!$Script:AutotaskAuthHeader -or !$Script:AutotaskBaseURI) {
@@ -251,7 +254,7 @@ function Remove-AutotaskAPIResource {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$ID
     )
     DynamicParam {
-        $Script:ResourceParameter
+        $Script:DeleteParameter
     }
     begin {
         if (!$Script:AutotaskAuthHeader -or !$Script:AutotaskBaseURI) {
@@ -313,7 +316,7 @@ function New-AutotaskAPIResource {
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]$Body
     )
     DynamicParam {
-        $Script:ResourceParameter
+        $Script:POSTParameter
     }
     begin {
         if (!$Script:AutotaskAuthHeader -or !$Script:AutotaskBaseURI) {
@@ -370,7 +373,7 @@ function Set-AutotaskAPIResource {
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]$body
     )
     DynamicParam {
-        $Script:ResourceParameter
+        $Script:PatchParameter
     }
     begin {
         if (!$Script:AutotaskAuthHeader -or !$Script:AutotaskBaseURI) {
