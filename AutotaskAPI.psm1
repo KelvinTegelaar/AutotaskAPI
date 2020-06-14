@@ -196,7 +196,7 @@ function Get-AutotaskAPIResource {
                 filter = @(@{
                         field = $SearchOps[0]
                         op    = $SearchOps[1]
-                        value = $SearchOps[2]
+                        value = $SearchOps | select-object -skip 2
                     })
             } -Compress
             
