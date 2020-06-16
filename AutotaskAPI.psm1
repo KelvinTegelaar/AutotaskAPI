@@ -24,7 +24,7 @@ function New-ResourceDynamicParameter
     $ParameterAttribute = New-Object System.Management.Automation.ParameterAttribute
     $ParameterAttribute.Mandatory = $true
     $AttributeCollection.Add($ParameterAttribute)
-    if(!$Script:Swagger){ $Script:Swagger = get-content "$($MyInvocation.MyCommand.Module.ModuleBase)\v1.json" -raw | ConvertFrom-Json }
+    if (!$Script:Swagger) { $Script:Swagger = get-content "$($MyInvocation.MyCommand.Module.ModuleBase)\v1.json" -raw | ConvertFrom-Json }
     $Script:Queries = foreach ($Path in $Script:Swagger.paths.psobject.Properties) {
         [PSCustomObject]@{
             Name   = $path.Name
@@ -32,10 +32,11 @@ function New-ResourceDynamicParameter
             Post   = $Path.value.post.tags
             Patch  = $Path.value.patch.tags
             Delete = $Path.value.delete.tags
+
         }
     }
     $ResourceList = foreach ($query in  $Queries | where-object { $null -ne $_."$ParameterType" }  ) {
-        $resource = ($query.name -split "/")[2]
+        $resource = $query."$ParameterType" | Select-Object -last 1
         $resource
     }
 
@@ -95,13 +96,9 @@ function Add-AutotaskBaseURI (
         "https://webservices18.autotask.net/atservicesrest",
         "https://webservices19.autotask.net/atservicesrest",
         "https://webservices12.autotask.net/atservicesrest")]
-    [Parameter(Mandatory = $true)]$BaseURI,
-    [ValidateSet(
-        "V1.0",
-        "Beta")]
-    [Parameter(Mandatory = $true)]$Version
+    [Parameter(Mandatory = $true)]$BaseURI
 ) {
-    $Script:AutotaskBaseURI = "$($BaseURI)/$($Version)"
+    $Script:AutotaskBaseURI = "$($BaseURI)"
 }
 <#
 .SYNOPSIS
@@ -139,7 +136,7 @@ function Add-AutotaskAPIAuth (
         #Little hacky, but rest api current returns double slashes in the path.
         $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A", "/A"
         write-host "Setting AutotaskBaseURI to $($AutotaskBaseURI.url) using version $Version" -ForegroundColor green
-        Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url -Version $Version
+        Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url
         write-host "Setting API resource parameters. This may take a moment." -ForegroundColor green
         $Script:GetParameter = New-ResourceDynamicParameter -Parametertype "Get"
         $Script:PatchParameter = New-ResourceDynamicParameter -Parametertype "Patch"
@@ -176,9 +173,15 @@ function Add-AutotaskAPIAuth (
 function Get-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(ParameterSetName = 'ID', Mandatory = $true, ValueFromPipelineByPropertyName = $true)][String]$ID,
-        [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $true)][String]$SearchQuery,
-        [Parameter(ParameterSetName = 'SimpleSearch', Mandatory = $true)][String]$SimpleSearch
+        [Parameter(ParameterSetName = 'ID', Mandatory = $true)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
+        [String]$ID,
+        [Parameter(ParameterSetName = 'ID', Mandatory = $false)]
+        [String]$ChildID,
+        [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $true)]
+        [String]$SearchQuery,
+        [Parameter(ParameterSetName = 'SimpleSearch', Mandatory = $true)]
+        [String]$SimpleSearch
     )
     DynamicParam {
         $Script:GetParameter
@@ -190,6 +193,7 @@ function Get-AutotaskAPIResource {
         }
         $resource = $PSBoundParameters.resource
         $headers = $Script:AutotaskAuthHeader
+        $ResourceURL = (($Script:Queries | Where-Object { $_.GET -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '/{PARENTID}' | Select-Object -first 1
         if ($SimpleSearch) {
             $SearchOps = $SimpleSearch -split ' '
             $SearchQuery = convertto-json @{
@@ -204,9 +208,20 @@ function Get-AutotaskAPIResource {
     }
 
     process {
-        
-        if ($ID) { $SetURI = "$($Script:AutotaskBaseURI)/$($resource)/$ID" }
-        if ($SearchQuery) { $SetURI = "$($Script:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
+        if ($resource -like "*child*" -and $SearchQuery) { 
+            write-warning "You cannot perform a JSON Search on child items. To find child items, use the parent ID."
+            break
+        }
+        if ($ID) {
+            $ResourceURL = ("$($ResourceURL)" -replace '{parentid}', "$($ID)") 
+        }
+        if ($ChildID) { 
+            $ResourceURL = ("$($ResourceURL)" -replace '{ID}', $ChildID)
+        }
+        if ($SearchQuery) { 
+            $ResourceURL = ("$($ResourceURL)/query?search=$SearchQuery" -replace '{PARENTID}', '')
+        }
+        $SetURI = "$($Script:AutotaskBaseURI)/$($ResourceURL)"
         try {
             do {
                 $items = Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
@@ -251,7 +266,8 @@ function Remove-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory = $true)][boolean]$confirm,
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$ID
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]$ID,
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]$ChildID
     )
     DynamicParam {
         $Script:DeleteParameter
@@ -263,13 +279,21 @@ function Remove-AutotaskAPIResource {
         }
         $resource = $PSBoundParameters.resource
         $headers = $Script:AutotaskAuthHeader     
+        $ResourceURL = (($Script:Queries | Where-Object { $_.'Delete' -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '/{PARENTID}' | Select-Object -first 1
+
     }
     
     
     process {
+        if(!$ChildID -and $resource -like "*Child*") {Write-Warning "You must enter a Child ID to delete a Child resource." ; break}
+        $resourceURL = $resourceURL -replace '{PARENTID}', $ID
+        if ($childID) { $resourceURL = "$($resourceURL)" -replace '{ID}', $ChildID }
+        if ($ID) { $resourceURL = "$($resourceURL)" -replace '{ID}', $ID }
+
+        $SetURI = "$($Script:AutotaskBaseURI)/$($resourceURL)"
         try {
             if ($confirm -eq $true) {
-                Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resource)/$ID" -headers $Headers -Method Delete
+                Invoke-RestMethod -Uri "$SetURI" -headers $Headers -Method Delete
             }
             else {
                 write-host "You must set confirm to `$True to execute a deletion."
@@ -325,13 +349,13 @@ function New-AutotaskAPIResource {
         }
         $resource = $PSBoundParameters.resource
         $headers = $Script:AutotaskAuthHeader
-
+        $ResourceURL = (($Script:Queries | Where-Object { $_.'Post' -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '' | Select-Object -first 1
     }
     
     process {
         $SendingBody = $body | ConvertTo-Json -Depth 10
         try {
-            Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resource)"  -headers $Headers -Method post -Body $SendingBody
+            Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceurl)"  -headers $Headers -Method post -Body $SendingBody
         }
         catch {
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
@@ -381,14 +405,15 @@ function Set-AutotaskAPIResource {
             break 
         }
         $resource = $PSBoundParameters.resource
-        $headers = $Script:AutotaskAuthHeader     
-        
+        $headers = $Script:AutotaskAuthHeader   
+        $ResourceURL = (($Script:Queries | Where-Object { $_.'Patch' -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '' | Select-Object -first 1
+  
     }
     
     process {
         try {
             $SendingBody = $PSBoundParameters.body | ConvertTo-Json -Depth 10
-            Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resource)" -headers $Headers -Body $SendingBody -Method Patch
+            Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($ResourceURL)" -headers $Headers -Body $SendingBody -Method Patch
         }
         catch {
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
@@ -432,20 +457,21 @@ function New-AutotaskBody {
         [Parameter(Mandatory = $false)][switch]$NoContent
     )
     DynamicParam {
-        $Script:ResourceParameter
+        $Script:PatchParameter
     }
     begin {
         if (!$Script:AutotaskAuthHeader -or !$Script:AutotaskBaseURI) {
             Write-Warning "You must first run Add-AutotaskAPIAuth before calling any other cmdlets" 
             break 
         }
-        
+        $resource = $PSBoundParameters.resource
         $Headers = $Script:AutotaskAuthHeader
     }
     process {
+        $ResourceURL = (($Script:Queries | Where-Object { $_.'Patch' -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '' | Select-Object -first 1
         try {
             $resource = $PSBoundParameters.resource
-            $ObjectTemplate = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resource)/entityInformation/fields" -headers $Headers -Method Get).fields
+            $ObjectTemplate = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/fields" -headers $Headers -Method Get).fields
             if (!$ObjectTemplate) { 
                 Write-Warning "No object template found for this definition: $Definitions" 
             }
