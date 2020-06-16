@@ -174,7 +174,7 @@ function Get-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
         [Parameter(ParameterSetName = 'ID', Mandatory = $true)]
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [String]$ID,
         [Parameter(ParameterSetName = 'ID', Mandatory = $false)]
         [String]$ChildID,
@@ -193,7 +193,7 @@ function Get-AutotaskAPIResource {
         }
         $resource = $PSBoundParameters.resource
         $headers = $Script:AutotaskAuthHeader
-        $global:ResourceURL = (($Script:Queries | Where-Object { $_.GET -eq $Resource }).Name | Select-Object -first 1) -replace '/query','/{PARENTID}' | Select-Object -first 1
+        $global:ResourceURL = (($Script:Queries | Where-Object { $_.GET -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '/{PARENTID}' | Select-Object -first 1
         if ($SimpleSearch) {
             $SearchOps = $SimpleSearch -split ' '
             $SearchQuery = convertto-json @{
@@ -208,16 +208,20 @@ function Get-AutotaskAPIResource {
     }
 
     process {
-        if (($global:ResourceURL) -like "*{ParentID}*") {
-            $SetURI = ("$($Script:AutotaskBaseURI)$($global:ResourceURL)" -replace '{parentid}', "$($ID)") 
+        if ($resource -like "*child*" -and $SearchQuery) { 
+            write-warning "You cannot perform a JSON Search on child items. To find child items, use the parent ID."
+            break
+        }
+        if ($ID) {
+            $global:ResourceURL = ("$($global:ResourceURL)" -replace '{parentid}', "$($ID)") 
         }
         if ($ChildID) { 
-            $SetURI = "$($Script:AutotaskBaseURI)$($global:ResourceURL)/$ID" -replace '{ID}', "$($ChildID)" 
+            $global:ResourceURL = ("$($global:ResourceURL)" -replace '{ID}', $ChildID)
         }
         if ($SearchQuery) { 
-            $SetURI = "$($Script:AutotaskBaseURI)$($global:ResourceURL)/query?search=$SearchQuery"
+            $global:ResourceURL = ("$($global:ResourceURL)/query?search=$SearchQuery" -replace '{PARENTID}', '')
         }
-
+        $SetURI = "$($Script:AutotaskBaseURI)/$($global:ResourceURL)"
         try {
             do {
                 $items = Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
