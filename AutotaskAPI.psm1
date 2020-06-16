@@ -486,7 +486,7 @@ function New-AutotaskBody {
                 if (!$NoContent) {
                     $ReturnedDef = [pscustomobject]
                     foreach ($prop in $ObjectTemplate) { 
-                        $ReturnedDef | Add-Member -NotePropertyName $prop.name -NotePropertyValue @("DataType:$($prop.datatype)", "Required:$($prop.isRequired)", $($prop.picklistValues | Out-String)) -Force
+                        $ReturnedDef | Add-Member -NotePropertyName $prop.name -NotePropertyValue @("DataType:$($prop.datatype)", "Required:$($prop.isRequired)", $($prop.picklistValues)) -Force
                     }
                 }
             }
