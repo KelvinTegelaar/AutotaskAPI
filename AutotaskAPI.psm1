@@ -133,10 +133,8 @@ function Add-AutotaskAPIAuth (
     try {
         $Version = (Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/versioninformation").apiversions | select-object -last 1
         $AutotaskBaseURI = Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/$($Version)/zoneInformation?user=$($Script:AutotaskAuthHeader.UserName)"
-        #Little hacky, but rest api current returns double slashes in the path.
-        $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A", "/A"
         write-host "Setting AutotaskBaseURI to $($AutotaskBaseURI.url) using version $Version" -ForegroundColor green
-        Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url
+        Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url.Trim('/')
         write-host "Setting API resource parameters. This may take a moment." -ForegroundColor green
         $Script:GetParameter = New-ResourceDynamicParameter -Parametertype "Get"
         $Script:PatchParameter = New-ResourceDynamicParameter -Parametertype "Patch"
@@ -144,7 +142,7 @@ function Add-AutotaskAPIAuth (
         $Script:POSTParameter = New-ResourceDynamicParameter -Parametertype "Post"
     }
     catch {
-        write-host "Could not Retrieve baseuri. E-mail address might be incorrect. You can manually add the baseuri via the Add-AutotaskBaseURI cmdlet. " -ForegroundColor red
+        write-host "Could not Retrieve baseuri. E-mail address might be incorrect. You can manually add the baseuri via the Add-AutotaskBaseURI cmdlet. $($_.Exception.Message)" -ForegroundColor red
     }
 
 }
@@ -239,7 +237,7 @@ function Get-AutotaskAPIResource {
                 write-error "API Error: $($ErrResp.errors)" 
             }
             else {
-                write-error "Connecting to the Autotask API failed. $($ErrResp.errors)"
+                write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
             }
         }
 
@@ -308,7 +306,7 @@ function Remove-AutotaskAPIResource {
                 write-error "API Error: $($ErrResp.errors)" 
             }
             else {
-                write-error "Connecting to the Autotask API failed. $($ErrResp.errors)"
+                write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
             }
         }
 
@@ -366,7 +364,7 @@ function New-AutotaskAPIResource {
                 write-error "API Error: $($ErrResp.errors)" 
             }
             else {
-                write-error "Connecting to the Autotask API failed. $($ErrResp.errors)"
+                write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
             }
         }
     }
@@ -424,7 +422,7 @@ function Set-AutotaskAPIResource {
                 write-error "API Error: $($ErrResp.errors)" 
             }
             else {
-                write-error "Connecting to the Autotask API failed. $($ErrResp.errors)"
+                write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
             }
         }
 
