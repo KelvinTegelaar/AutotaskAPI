@@ -32,11 +32,11 @@ function New-ResourceDynamicParameter
             Post   = $Path.value.post.tags
             Patch  = $Path.value.patch.tags
             Delete = $Path.value.delete.tags
-            Child  = $path.name | where-object {$_ -like "*{parentid}*"}
+
         }
     }
     $ResourceList = foreach ($query in  $Queries | where-object { $null -ne $_."$ParameterType" }  ) {
-        $resource = ($query.name -split "/")[2]
+        $resource = $query."$ParameterType" | Select-Object -last 1
         $resource
     }
 
@@ -96,13 +96,9 @@ function Add-AutotaskBaseURI (
         "https://webservices18.autotask.net/atservicesrest",
         "https://webservices19.autotask.net/atservicesrest",
         "https://webservices12.autotask.net/atservicesrest")]
-    [Parameter(Mandatory = $true)]$BaseURI,
-    [ValidateSet(
-        "V1.0",
-        "Beta")]
-    [Parameter(Mandatory = $true)]$Version
+    [Parameter(Mandatory = $true)]$BaseURI
 ) {
-    $Script:AutotaskBaseURI = "$($BaseURI)/$($Version)"
+    $Script:AutotaskBaseURI = "$($BaseURI)"
 }
 <#
 .SYNOPSIS
@@ -140,7 +136,7 @@ function Add-AutotaskAPIAuth (
         #Little hacky, but rest api current returns double slashes in the path.
         $AutotaskBaseURI.url = $AutotaskBaseURI.url -replace "//A", "/A"
         write-host "Setting AutotaskBaseURI to $($AutotaskBaseURI.url) using version $Version" -ForegroundColor green
-        Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url -Version $Version
+        Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url
         write-host "Setting API resource parameters. This may take a moment." -ForegroundColor green
         $Script:GetParameter = New-ResourceDynamicParameter -Parametertype "Get"
         $Script:PatchParameter = New-ResourceDynamicParameter -Parametertype "Patch"
@@ -177,9 +173,15 @@ function Add-AutotaskAPIAuth (
 function Get-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(ParameterSetName = 'ID', Mandatory = $true, ValueFromPipelineByPropertyName = $true)][String]$ID,
-        [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $true)][String]$SearchQuery,
-        [Parameter(ParameterSetName = 'SimpleSearch', Mandatory = $true)][String]$SimpleSearch
+        [Parameter(ParameterSetName = 'ID', Mandatory = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [String]$ID,
+        [Parameter(ParameterSetName = 'ID', Mandatory = $false)]
+        [String]$ChildID,
+        [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $true)]
+        [String]$SearchQuery,
+        [Parameter(ParameterSetName = 'SimpleSearch', Mandatory = $true)]
+        [String]$SimpleSearch
     )
     DynamicParam {
         $Script:GetParameter
@@ -191,6 +193,7 @@ function Get-AutotaskAPIResource {
         }
         $resource = $PSBoundParameters.resource
         $headers = $Script:AutotaskAuthHeader
+        $global:ResourceURL = (($Script:Queries | Where-Object { $_.GET -eq $Resource }).Name | Select-Object -first 1) -replace '/query','/{PARENTID}' | Select-Object -first 1
         if ($SimpleSearch) {
             $SearchOps = $SimpleSearch -split ' '
             $SearchQuery = convertto-json @{
@@ -205,9 +208,16 @@ function Get-AutotaskAPIResource {
     }
 
     process {
-        
-        if ($ID) { $SetURI = "$($Script:AutotaskBaseURI)/$($resource)/$ID" }
-        if ($SearchQuery) { $SetURI = "$($Script:AutotaskBaseURI)/$($resource)/query?search=$SearchQuery" }
+        if (($global:ResourceURL) -like "*{ParentID}*") {
+            $SetURI = ("$($Script:AutotaskBaseURI)$($global:ResourceURL)" -replace '{parentid}', "$($ID)") 
+        }
+        if ($ChildID) { 
+            $SetURI = "$($Script:AutotaskBaseURI)$($global:ResourceURL)/$ID" -replace '{ID}', "$($ChildID)" 
+        }
+        if ($SearchQuery) { 
+            $SetURI = "$($Script:AutotaskBaseURI)$($global:ResourceURL)/query?search=$SearchQuery"
+        }
+
         try {
             do {
                 $items = Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
