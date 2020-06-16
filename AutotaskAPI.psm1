@@ -216,7 +216,7 @@ function Get-AutotaskAPIResource {
             $ResourceURL = ("$($ResourceURL)" -replace '{parentid}', "$($ID)") 
         }
         if ($ChildID) { 
-            $ResourceURL = ("$($ResourceURL)" -replace '{ID}', $ChildID)
+            $ResourceURL = ("$($ResourceURL)/$ChildID")
         }
         if ($SearchQuery) { 
             $ResourceURL = ("$($ResourceURL)/query?search=$SearchQuery" -replace '{PARENTID}', '')
