@@ -283,7 +283,7 @@ function Remove-AutotaskAPIResource {
     
     
     process {
-        if(!$ChildID -and $resource -like "*Child*") {Write-Warning "You must enter a Child ID to delete a Child resource." ; break}
+        if (!$ChildID -and $resource -like "*Child*") { Write-Warning "You must enter a Child ID to delete a Child resource." ; break }
         $resourceURL = $resourceURL -replace '{PARENTID}', $ID
         if ($childID) { $resourceURL = "$($resourceURL)" -replace '{ID}', $ChildID }
         if ($ID) { $resourceURL = "$($resourceURL)" -replace '{ID}', $ID }
@@ -470,6 +470,7 @@ function New-AutotaskBody {
         try {
             $resource = $PSBoundParameters.resource
             $ObjectTemplate = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/fields" -headers $Headers -Method Get).fields
+            $UDFs = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/userdefinedfields" -headers $Headers -Method Get).fields | select-object name,value
             if (!$ObjectTemplate) { 
                 Write-Warning "No object template found for this definition: $Definitions" 
             }
@@ -477,18 +478,21 @@ function New-AutotaskBody {
                 if ($NoContent) { 
                     $ReturnedDef = [pscustomobject]
                     foreach ($prop in $ObjectTemplate.Name) { 
-                        $ReturnedDef | Add-Member -NotePropertyName $prop -NotePropertyValue ' ' -Force
+                        $ReturnedDef | Add-Member -NotePropertyName $prop -NotePropertyValue $null -Force
                     }
                     
                 }
                 if (!$NoContent) {
                     $ReturnedDef = [pscustomobject]
+                    $ReturnedDef | Add-Member -NotePropertyName 'UserdefinedFields' -NotePropertyValue $UDFs -Force
                     foreach ($prop in $ObjectTemplate) { 
-                        $ReturnedDef | Add-Member -NotePropertyName $prop.name -NotePropertyValue @("DataType:$($prop.datatype)", "Required:$($prop.isRequired)", $($prop.picklistValues)) -Force
+                        $ExpectedValue = if ($prop.picklistValues) { $prop.picklistValues | select-object Label,Value,IsActive } else { $($prop.datatype) }
+                        $ReturnedDef | Add-Member -NotePropertyName $prop.name -NotePropertyValue $ExpectedValue -Force
                     }
                 }
             }
-            return $ReturnedDef | select-object $ObjectTemplate.name
+            $Names = $ObjectTemplate.name + "UserDefinedFields"
+            return $ReturnedDef | select-object $Names
 
         }
         catch {
