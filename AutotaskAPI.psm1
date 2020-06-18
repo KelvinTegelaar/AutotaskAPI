@@ -470,7 +470,7 @@ function New-AutotaskBody {
         try {
             $resource = $PSBoundParameters.resource
             $ObjectTemplate = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/fields" -headers $Headers -Method Get).fields
-            $UDFs = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/userdefinedfields" -headers $Headers -Method Get).fields | select-object name,value
+            $UDFs = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/userdefinedfields" -headers $Headers -Method Get).fields | select-object name, value
             if (!$ObjectTemplate) { 
                 Write-Warning "No object template found for this definition: $Definitions" 
             }
@@ -486,12 +486,12 @@ function New-AutotaskBody {
                     $ReturnedDef = [pscustomobject]
                     $ReturnedDef | Add-Member -NotePropertyName 'UserdefinedFields' -NotePropertyValue $UDFs -Force
                     foreach ($prop in $ObjectTemplate) { 
-                        $ExpectedValue = if ($prop.picklistValues) { $prop.picklistValues | select-object Label,Value,IsActive } else { $($prop.datatype) }
+                        $ExpectedValue = if ($prop.picklistValues) { $prop.picklistValues | select-object Label, Value, IsActive } else { $($prop.datatype) }
                         $ReturnedDef | Add-Member -NotePropertyName $prop.name -NotePropertyValue $ExpectedValue -Force
                     }
                 }
             }
-            $Names = $ObjectTemplate.name + "UserDefinedFields"
+            $Names = if($UDF) {  $ObjectTemplate.name + "UserDefinedFields" } else { $ObjectTemplate.name}
             return $ReturnedDef | select-object $Names
 
         }
