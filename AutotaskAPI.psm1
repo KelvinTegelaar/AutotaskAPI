@@ -472,7 +472,7 @@ function New-AutotaskBody {
             $ObjectTemplate = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/fields" -headers $Headers -Method Get).fields
             $UDFs = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/userdefinedfields" -headers $Headers -Method Get).fields | select-object name, value
             if (!$ObjectTemplate) { 
-                Write-Warning "No object template found for this definition: $Definitions" 
+                Write-Warning "Could not retrieve example body for $($Resource)" 
             }
             else {
                 if ($NoContent) { 
