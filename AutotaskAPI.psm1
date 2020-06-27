@@ -231,7 +231,7 @@ function Get-AutotaskAPIResource {
         catch {
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
             $streamReader.BaseStream.Position = 0
-            $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json
+            if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
             $streamReader.Close()
             if ($ErrResp.errors) { 
                 write-error "API Error: $($ErrResp.errors)" 
@@ -300,7 +300,7 @@ function Remove-AutotaskAPIResource {
         catch {
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
             $streamReader.BaseStream.Position = 0
-            $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json
+            if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
             $streamReader.Close()
             if ($ErrResp.errors) { 
                 write-error "API Error: $($ErrResp.errors)" 
@@ -358,7 +358,7 @@ function New-AutotaskAPIResource {
         catch {
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
             $streamReader.BaseStream.Position = 0
-            $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json
+            if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
             $streamReader.Close()
             if ($ErrResp.errors) { 
                 write-error "API Error: $($ErrResp.errors)" 
@@ -416,7 +416,7 @@ function Set-AutotaskAPIResource {
         catch {
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
             $streamReader.BaseStream.Position = 0
-            $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json
+            if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
             $streamReader.Close()
             if ($ErrResp.errors) { 
                 write-error "API Error: $($ErrResp.errors)" 
@@ -491,7 +491,7 @@ function New-AutotaskBody {
                     }
                 }
             }
-            $Names = if($UDF) {  $ObjectTemplate.name + "UserDefinedFields" } else { $ObjectTemplate.name}
+            $Names = if ($UDF) { $ObjectTemplate.name + "UserDefinedFields" } else { $ObjectTemplate.name }
             return $ReturnedDef | select-object $Names
 
         }
