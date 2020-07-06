@@ -122,7 +122,7 @@ function Add-AutotaskAPIAuth (
 ) {
     #We convert the securestring...back to a normal string :'( Why basic auth AT? why?!
     $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($credentials.Password)
-    $Secret = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+    $Secret = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($BSTR)
     $Script:AutotaskAuthHeader = @{
         'ApiIntegrationcode' = $ApiIntegrationcode
         'UserName'           = $credentials.UserName
@@ -231,7 +231,7 @@ function Get-AutotaskAPIResource {
         catch {
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
             $streamReader.BaseStream.Position = 0
-            $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json
+            if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
             $streamReader.Close()
             if ($ErrResp.errors) { 
                 write-error "API Error: $($ErrResp.errors)" 
@@ -300,7 +300,7 @@ function Remove-AutotaskAPIResource {
         catch {
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
             $streamReader.BaseStream.Position = 0
-            $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json
+            if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
             $streamReader.Close()
             if ($ErrResp.errors) { 
                 write-error "API Error: $($ErrResp.errors)" 
@@ -358,7 +358,7 @@ function New-AutotaskAPIResource {
         catch {
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
             $streamReader.BaseStream.Position = 0
-            $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json
+            if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
             $streamReader.Close()
             if ($ErrResp.errors) { 
                 write-error "API Error: $($ErrResp.errors)" 
@@ -416,7 +416,7 @@ function Set-AutotaskAPIResource {
         catch {
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
             $streamReader.BaseStream.Position = 0
-            $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json
+            if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
             $streamReader.Close()
             if ($ErrResp.errors) { 
                 write-error "API Error: $($ErrResp.errors)" 
@@ -470,9 +470,9 @@ function New-AutotaskBody {
         try {
             $resource = $PSBoundParameters.resource
             $ObjectTemplate = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/fields" -headers $Headers -Method Get).fields
-            $UDFs = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/userdefinedfields" -headers $Headers -Method Get).fields | select-object name,value
+            $UDFs = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/userdefinedfields" -headers $Headers -Method Get).fields | select-object name, value
             if (!$ObjectTemplate) { 
-                Write-Warning "No object template found for this definition: $Definitions" 
+                Write-Warning "Could not retrieve example body for $($Resource)" 
             }
             else {
                 if ($NoContent) { 
@@ -486,12 +486,12 @@ function New-AutotaskBody {
                     $ReturnedDef = [pscustomobject]
                     $ReturnedDef | Add-Member -NotePropertyName 'UserdefinedFields' -NotePropertyValue $UDFs -Force
                     foreach ($prop in $ObjectTemplate) { 
-                        $ExpectedValue = if ($prop.picklistValues) { $prop.picklistValues | select-object Label,Value,IsActive } else { $($prop.datatype) }
+                        $ExpectedValue = if ($prop.picklistValues) { $prop.picklistValues | select-object Label, Value, IsActive } else { $($prop.datatype) }
                         $ReturnedDef | Add-Member -NotePropertyName $prop.name -NotePropertyValue $ExpectedValue -Force
                     }
                 }
             }
-            $Names = $ObjectTemplate.name + "UserDefinedFields"
+            $Names = if ($UDF) { $ObjectTemplate.name + "UserDefinedFields" } else { $ObjectTemplate.name }
             return $ReturnedDef | select-object $Names
 
         }
