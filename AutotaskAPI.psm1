@@ -122,7 +122,7 @@ function Add-AutotaskAPIAuth (
 ) {
     #We convert the securestring...back to a normal string :'( Why basic auth AT? why?!
     $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($credentials.Password)
-    $Secret = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+    $Secret = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($BSTR)
     $Script:AutotaskAuthHeader = @{
         'ApiIntegrationcode' = $ApiIntegrationcode
         'UserName'           = $credentials.UserName
