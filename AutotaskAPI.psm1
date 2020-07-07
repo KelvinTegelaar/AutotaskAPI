@@ -99,6 +99,11 @@ function Add-AutotaskBaseURI (
     [Parameter(Mandatory = $true)]$BaseURI
 ) {
     $Script:AutotaskBaseURI = "$($BaseURI)"
+    write-host "Setting API resource parameters. This may take a moment." -ForegroundColor green
+    $Script:GetParameter = New-ResourceDynamicParameter -Parametertype "Get"
+    $Script:PatchParameter = New-ResourceDynamicParameter -Parametertype "Patch"
+    $Script:DeleteParameter = New-ResourceDynamicParameter -Parametertype "Delete"
+    $Script:POSTParameter = New-ResourceDynamicParameter -Parametertype "Post"
 }
 <#
 .SYNOPSIS
