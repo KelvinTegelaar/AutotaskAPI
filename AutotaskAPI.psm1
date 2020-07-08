@@ -140,11 +140,6 @@ function Add-AutotaskAPIAuth (
         $AutotaskBaseURI = Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/$($Version)/zoneInformation?user=$($Script:AutotaskAuthHeader.UserName)"
         write-host "Setting AutotaskBaseURI to $($AutotaskBaseURI.url) using version $Version" -ForegroundColor green
         Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url.Trim('/')
-        write-host "Setting API resource parameters. This may take a moment." -ForegroundColor green
-        $Script:GetParameter = New-ResourceDynamicParameter -Parametertype "Get"
-        $Script:PatchParameter = New-ResourceDynamicParameter -Parametertype "Patch"
-        $Script:DeleteParameter = New-ResourceDynamicParameter -Parametertype "Delete"
-        $Script:POSTParameter = New-ResourceDynamicParameter -Parametertype "Post"
     }
     catch {
         write-host "Could not Retrieve baseuri. E-mail address might be incorrect. You can manually add the baseuri via the Add-AutotaskBaseURI cmdlet. $($_.Exception.Message)" -ForegroundColor red
