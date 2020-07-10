@@ -223,9 +223,28 @@ function Get-AutotaskAPIResource {
         try {
             do {
                 $items = Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
-                $SetURI = $items.PageDetails.NextPageUrl 
-                if ($items.items) { $items.items }
-                if ($items.item) { $items.item }  
+                $SetURI = $items.PageDetails.NextPageUrl
+                #[System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([datetime]::UtcNow, (get-timezone).id)
+              
+                if ($items.items) { 
+                    foreach ($item in $items.items) {
+                        foreach ($date in $item.psobject.Properties | Where-Object { $_.name -like '*date*' }) {
+                         $ConvertedDate = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([datetime]$date.value, (get-timezone).id).ToString('yyyy-MM-ddTHH:mm:ss.fff')
+                         $item.$($date.name) = $ConvertedDate 
+                        }
+                        $item
+                    }
+                }
+                if ($items.item) {
+                    foreach ($item in $items.item) {
+                        foreach ($date in $item.psobject.Properties | Where-Object { $_.name -like '*date*' }) {
+                         $ConvertedDate = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([datetime]$date.value, (get-timezone).id).ToString('yyyy-MM-ddTHH:mm:ss.fff')
+                         $item.$($date.name) = $ConvertedDate 
+                        }
+                        $item
+                    }
+                    
+                }  
             } while ($null -ne $SetURI)
         }
         catch {
