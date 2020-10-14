@@ -491,7 +491,7 @@ function New-AutotaskBody {
                     }
                 }
             }
-            $Names = if ($UDF) { $ObjectTemplate.name + "UserDefinedFields" } else { $ObjectTemplate.name }
+            $Names = if ($UDFs) { $ObjectTemplate.name + "UserDefinedFields" } else { $ObjectTemplate.name }
             return $ReturnedDef | select-object $Names
 
         }
