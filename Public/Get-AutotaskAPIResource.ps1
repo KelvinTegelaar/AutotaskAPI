@@ -80,19 +80,13 @@ function Get-AutotaskAPIResource {
               
                 if ($items.items) { 
                     foreach ($item in $items.items) {
-                        foreach ($date in $item.psobject.Properties | Where-Object { $_.name -like '*date*' }) {
-                         $ConvertedDate = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([datetime]$date.value, (get-timezone).id).ToString('yyyy-MM-ddTHH:mm:ss.fff')
-                         $item.$($date.name) = $ConvertedDate 
-                        }
+
                         $item
                     }
                 }
                 if ($items.item) {
                     foreach ($item in $items.item) {
-                        foreach ($date in $item.psobject.Properties | Where-Object { $_.name -like '*date*' }) {
-                         $ConvertedDate = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([datetime]$date.value, (get-timezone).id).ToString('yyyy-MM-ddTHH:mm:ss.fff')
-                         $item.$($date.name) = $ConvertedDate 
-                        }
+
                         $item
                     }
                     
