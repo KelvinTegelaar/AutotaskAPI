@@ -55,4 +55,5 @@ function Add-AutotaskBaseURI (
     $Script:PatchParameter = New-ResourceDynamicParameter -Parametertype "Patch"
     $Script:DeleteParameter = New-ResourceDynamicParameter -Parametertype "Delete"
     $Script:POSTParameter = New-ResourceDynamicParameter -Parametertype "Post"
+    $Script:PostPatchParameter = New-ResourceDynamicParameter -Parametertype "Post Patch"
 }

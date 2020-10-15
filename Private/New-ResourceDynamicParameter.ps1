@@ -35,10 +35,14 @@ function New-ResourceDynamicParameter
 
         }
     }
-    $ResourceList = foreach ($query in  $Queries | where-object { $null -ne $_."$ParameterType" }  ) {
-        $resource = $query."$ParameterType" | Select-Object -last 1
-        $resource
+    $ResourceList = $null
+    foreach ( $ParameterTypeN in $ParameterType.Split( ' ' ) ) {
+        $ResourceList += foreach ($query in  $Queries | where-object { $null -ne $_."$ParameterTypeN" }  ) {
+            $resource = $query."$ParameterTypeN" | Select-Object -last 1
+            $resource
+        }
     }
+    $ResourceList = $ResourceList | Sort-Object -Unique
 
     $ValidateSetAttribute = New-Object System.Management.Automation.ValidateSetAttribute($ResourceList)
     $AttributeCollection.Add($ValidateSetAttribute)
