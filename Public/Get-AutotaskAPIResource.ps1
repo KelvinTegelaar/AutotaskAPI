@@ -99,7 +99,7 @@ function Get-AutotaskAPIResource {
                 }  
             } while ($null -ne $SetURI)
         }
-        catch {
+        catch {cd 
             $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
             $streamReader.BaseStream.Position = 0
             if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
