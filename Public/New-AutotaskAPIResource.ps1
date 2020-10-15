@@ -21,7 +21,8 @@
 function New-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]$Body
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]$Body,
+        [Parameter(Mandatory = $false)][String]$ParentId
     )
     DynamicParam {
         $Script:POSTParameter
@@ -37,6 +38,13 @@ function New-AutotaskAPIResource {
     }
     
     process {
+        if ($resource -like "*child*" ) {
+            if ( !$ParentId ) {
+                Write-Warning "You must specify a parentId when creating a child resource" 
+                break 
+            }
+            $ResourceURL = $resourceURL -replace '{parentId}', $ParentId
+        }
         $SendingBody = $body | ConvertTo-Json -Depth 10
         try {
             Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceurl)"  -headers $Headers -Method post -Body $SendingBody
