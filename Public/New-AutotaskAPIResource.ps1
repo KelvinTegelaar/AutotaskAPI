@@ -42,10 +42,12 @@ function New-AutotaskAPIResource {
             Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceurl)"  -headers $Headers -Method post -Body $SendingBody
         }
         catch {
-            $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
-            $streamReader.BaseStream.Position = 0
-            if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
-            $streamReader.Close()
+            if ($psversiontable.psversion.major -lt 6) {
+                $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
+                $streamReader.BaseStream.Position = 0
+                if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
+                $streamReader.Close()
+            }
             if ($ErrResp.errors) { 
                 write-error "API Error: $($ErrResp.errors)" 
             }
