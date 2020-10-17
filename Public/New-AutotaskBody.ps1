@@ -24,7 +24,7 @@ function New-AutotaskBody {
         [Parameter(Mandatory = $false)][switch]$NoContent
     )
     DynamicParam {
-        $Script:PatchParameter
+        $Script:PostPatchParameter
     }
     begin {
         if (!$Script:AutotaskAuthHeader -or !$Script:AutotaskBaseURI) {
@@ -35,11 +35,20 @@ function New-AutotaskBody {
         $Headers = $Script:AutotaskAuthHeader
     }
     process {
-        $ResourceURL = (($Script:Queries | Where-Object { $_.'Patch' -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '' | Select-Object -first 1
+        $ResourceURL = (($Script:Queries | Where-Object { $_.'Post' -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '' | Select-Object -first 1
+        if ( !$ResourceURL ) {
+            $ResourceURL = (($Script:Queries | Where-Object { $_.'Patch' -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '' | Select-Object -first 1
+        }
         try {
             $resource = $PSBoundParameters.resource
             $ObjectTemplate = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/fields" -headers $Headers -Method Get).fields
-            $UDFs = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/userdefinedfields" -headers $Headers -Method Get).fields | select-object name, value
+            try {
+                $UDFs = (Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($resourceURL)/entityInformation/userdefinedfields" -headers $Headers -Method Get).fields | select-object name, value
+            } catch {
+                if ( $_.Exception.Response.StatusCode -ne "NotFound" ) {
+                    throw
+                }
+            }
             if (!$ObjectTemplate) { 
                 Write-Warning "Could not retrieve example body for $($Resource)" 
             }
