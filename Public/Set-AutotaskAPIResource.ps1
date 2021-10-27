@@ -37,12 +37,19 @@ function Set-AutotaskAPIResource {
         $resource = $PSBoundParameters.resource
         $headers = $Script:AutotaskAuthHeader   
         $ResourceURL = (($Script:Queries | Where-Object { $_.'Patch' -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '' | Select-Object -first 1
-  
+
+        $MyBody = New-Object -TypeName PSObject
+        if ($ID) {
+            $MyBody | Add-Member -NotePropertyMembers @{id=$ID}
+        }
+        $PSBoundParameters.body.PSObject.properties | Where-Object {$null -ne $_.Value} | ForEach-Object {Add-Member -InputObject $MyBody -NotePropertyMembers @{$_.Name=$_.Value}}
     }
     
     process {
         try {
-            $SendingBody = $PSBoundParameters.body | ConvertTo-Json -Depth 10
+            # Iterating through the property names above produces an array of n MyBody objects, all the same,
+            # where n is the number of non-null properties.  Grab the first one.
+            $SendingBody = $MyBody[0] | ConvertTo-Json -Depth 10
             Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($ResourceURL)" -headers $Headers -Body $SendingBody -Method Patch
         }
         catch {
