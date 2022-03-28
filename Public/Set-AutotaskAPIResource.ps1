@@ -5,15 +5,22 @@
 .DESCRIPTION
  Sets a resource in the API to the supplied object. Uses the Patch method. Each item in the object will be overwritten at the API side. Null values will overwrite with null values.
 .EXAMPLE
-    PS C:\>  Get-AutotaskAPIResource -resource Companies -ID 1234
-    Finds the company with 1234 in the Autotask REST API.
+    PS C:\>  Set-AutotaskAPIResource -resource Companies -ID 1234 -Body $body
+    Updates the company with ID 1234 in the Autotask REST API, changing any parameters in $body.
 
-    PS C:\>  Get-AutotaskAPIResource -resource Companies -SearchQuery={filter='active -eq true'}
-    Finds all companies which are active.
+    PS C:\>  $TicketList = Get-AutotaskAPIResource -Resource Tickets -SimpleSearch "title eq Nope!"
+    PS C:\>  $ticketlist | ForEach-Object { $_.status = "12" }
+    PS C:\>  $ticketlist | Set-AutotaskAPIResource -Resource Tickets
+    Closes all tickets with the subject "Nope!".
+
+    Get-AutotaskAPIResource -Resource Companies -SimpleSearch 'Isactive eq true' | ForEach-Object {$_.Webaddress = "www.google.com"; $_} | Set-AutotaskAPIResource -Resource companies
+    A one-liner to change all companies webaddresses to "google.com".
+    
 .INPUTS
     -Resource: Which resource to find. Tab completion is available.
-    -ID: ID of the resource you want to retrieve
-    -SearchQuery: JSON Search filter.
+    -ID: ID of the resource you want to update. Can be passed as a property on the pipeline.
+    -Body: A PS object containing all of the parameters you want to update. Can be passed by pipeline.
+    
 .OUTPUTS
     none
 .NOTES
