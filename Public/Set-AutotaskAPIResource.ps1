@@ -45,14 +45,15 @@ function Set-AutotaskAPIResource {
         $headers = $Script:AutotaskAuthHeader   
         $ResourceURL = (($Script:Queries | Where-Object { $_.'Patch' -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '' | Select-Object -first 1
 
+    }
+    
+    process {
         $MyBody = New-Object -TypeName PSObject
         if ($ID) {
             $MyBody | Add-Member -NotePropertyMembers @{id=$ID}
         }
         $PSBoundParameters.body.PSObject.properties | Where-Object {$null -ne $_.Value} | ForEach-Object {Add-Member -InputObject $MyBody -NotePropertyMembers @{$_.Name=$_.Value}}
-    }
-    
-    process {
+
         try {
             # Iterating through the property names above produces an array of n MyBody objects, all the same,
             # where n is the number of non-null properties.  Grab the first one.
