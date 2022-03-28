@@ -15,10 +15,11 @@
 
     Get-AutotaskAPIResource -Resource Companies -SimpleSearch 'Isactive eq true' | ForEach-Object {$_.Webaddress = "www.google.com"; $_} | Set-AutotaskAPIResource -Resource companies
     A one-liner to change all companies webaddresses to "google.com".
-    
+
 .INPUTS
     -Resource: Which resource to find. Tab completion is available.
     -ID: ID of the resource you want to update. Can be passed as a property on the pipeline.
+    -ParentID: For use with 'Child' endpoints, the ID of the parent you are updating.
     -Body: A PS object containing all of the parameters you want to update. Can be passed by pipeline.
     
 .OUTPUTS
@@ -29,7 +30,7 @@
 function Set-AutotaskAPIResource {
     [CmdletBinding()]
     Param(
-        [Parameter(ParameterSetName = 'ParentID', Mandatory = $false)]
+        [Parameter(ParameterSetName = 'ParentID', Mandatory = $false)][String]$ParentId,
         [Parameter(ValueFromPipelineByPropertyName = $true)]$ID,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]$body
     )
@@ -45,6 +46,13 @@ function Set-AutotaskAPIResource {
         $headers = $Script:AutotaskAuthHeader   
         $ResourceURL = (($Script:Queries | Where-Object { $_.'Patch' -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '' | Select-Object -first 1
 
+        if ($resource -like "*child*" ) {
+            if ( !$ParentId ) {
+                Write-Warning "You must specify a parentId when settings a child resource" 
+                break 
+            }
+            $ResourceURL = $resourceURL -replace '{parentId}', $ParentId
+        }
     }
     
     process {
