@@ -43,7 +43,9 @@ function Get-AutotaskAPIResource {
         }
         $resource = $PSBoundParameters.resource
         $headers = $Script:AutotaskAuthHeader
-        $ResourceURL = (($Script:Queries | Where-Object { $_.GET -eq $Resource }).Name | Select-Object -first 1) -replace '/query', '/{PARENTID}' | Select-Object -first 1
+        $Script:Index = $Script:Queries | group-object Index -AsHashTable -AsString
+        $ResourceURL = @(($Script:Index[$resource] | Where-object {$_.Get -eq $resource}))[0]
+        $ResourceURL.name = $ResourceURL.name.replace("/query","/{PARENTID}") 
         if ($SimpleSearch) {
             $SearchOps = $SimpleSearch -split ' '
             $SearchQuery = convertto-json @{
@@ -69,7 +71,7 @@ function Get-AutotaskAPIResource {
             $ResourceURL = ("$($ResourceURL)/$ChildID")
         }
         if ($SearchQuery) { 
-            $ResourceURL = ("$($ResourceURL)/query?search=$SearchQuery" -replace '{PARENTID}', '')
+            $ResourceURL = ("$($ResourceURL.name)/query?search=$SearchQuery" -replace '{PARENTID}', '')
         }
         $SetURI = "$($Script:AutotaskBaseURI)/$($ResourceURL)"
         try {
@@ -77,7 +79,7 @@ function Get-AutotaskAPIResource {
                 $items = Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
                 $SetURI = $items.PageDetails.NextPageUrl
                 #[System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([datetime]::UtcNow, (get-timezone).id)
-              
+            
                 if ($items.items) { 
                     foreach ($item in $items.items) {
 

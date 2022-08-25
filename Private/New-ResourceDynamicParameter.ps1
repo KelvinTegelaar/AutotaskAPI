@@ -25,13 +25,14 @@ function New-ResourceDynamicParameter
     $ParameterAttribute.Mandatory = $true
     $AttributeCollection.Add($ParameterAttribute)
     if (!$Script:Swagger) { $Script:Swagger = get-content "$($MyInvocation.MyCommand.Module.ModuleBase)\v1.json" -raw | ConvertFrom-Json }
-    $Script:Queries = foreach ($Path in $Script:Swagger.paths.psobject.Properties) {
+        $Script:Queries = foreach ($Path in $Script:Swagger.paths.psobject.Properties) {
         [PSCustomObject]@{
-            Name   = $path.Name
-            Get    = $Path.value.get.tags
-            Post   = $Path.value.post.tags
-            Patch  = $Path.value.patch.tags
-            Delete = $Path.value.delete.tags
+            Index  = $($path.name.split("/")[2])
+            Name   = $($path.Name)
+            Get    = $($Path.value.get.tags)
+            Post   = $($Path.value.post.tags)
+            Patch  = $($Path.value.patch.tags)
+            Delete = $($Path.value.delete.tags)
 
         }
     }
