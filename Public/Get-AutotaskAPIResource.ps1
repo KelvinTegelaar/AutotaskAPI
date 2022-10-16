@@ -43,16 +43,16 @@ function Get-AutotaskAPIResource {
         }
         $resource = $PSBoundParameters.resource
         $headers = $Script:AutotaskAuthHeader
-        $Script:Index = $Script:Queries | group-object Index -AsHashTable -AsString
-        $ResourceURL = @(($Script:Index[$resource] | Where-object {$_.Get -eq $resource}))[0]
-        $ResourceURL.name = $ResourceURL.name.replace("/query","/{PARENTID}") 
+        $Script:Index = $Script:Queries | Group-Object Index -AsHashTable -AsString
+        $ResourceURL = @(($Script:Index[$resource] | Where-Object { $_.Get -eq $resource }))[0]
+        $ResourceURL.name = $ResourceURL.name.replace("/query", "/{PARENTID}") 
         if ($SimpleSearch) {
             $SearchOps = $SimpleSearch -split ' '
-            $SearchQuery = convertto-json @{
+            $SearchQuery = ConvertTo-Json @{
                 filter = @(@{
                         field = $SearchOps[0]
                         op    = $SearchOps[1]
-                        value = $SearchOps | select-object -skip 2
+                        value = $SearchOps | Select-Object -Skip 2
                     })
             } -Compress
             
@@ -61,11 +61,11 @@ function Get-AutotaskAPIResource {
 
     process {
         if ($resource -like "*child*" -and $SearchQuery) { 
-            write-warning "You cannot perform a JSON Search on child items. To find child items, use the parent ID."
+            Write-Warning "You cannot perform a JSON Search on child items. To find child items, use the parent ID."
             break
         }
         if ($ID) {
-            $ResourceURL = ("$($ResourceURL)" -replace '{parentid}', "$($ID)") 
+            $ResourceURL = ("$($ResourceURL.name)" -replace '{parentid}', "$($ID)") 
         }
         if ($ChildID) { 
             $ResourceURL = ("$($ResourceURL)/$ChildID")
@@ -76,7 +76,7 @@ function Get-AutotaskAPIResource {
         $SetURI = "$($Script:AutotaskBaseURI)/$($ResourceURL)"
         try {
             do {
-                $items = Invoke-RestMethod -Uri $SetURI -headers $Headers -Method Get
+                $items = Invoke-RestMethod -Uri $SetURI -Headers $Headers -Method Get
                 $SetURI = $items.PageDetails.NextPageUrl
                 #[System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([datetime]::UtcNow, (get-timezone).id)
             
@@ -97,16 +97,16 @@ function Get-AutotaskAPIResource {
         }
         catch {
             if ($psversiontable.psversion.major -lt 6) {
-            $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
-            $streamReader.BaseStream.Position = 0
-            if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
-            $streamReader.Close()
+                $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
+                $streamReader.BaseStream.Position = 0
+                if ($streamReader.ReadToEnd() -like '*{*') { $ErrResp = $streamReader.ReadToEnd() | ConvertFrom-Json }
+                $streamReader.Close()
             }
             if ($ErrResp.errors) { 
-                write-error "API Error: $($ErrResp.errors)" 
+                Write-Error "API Error: $($ErrResp.errors)" 
             }
             else {
-                write-error "Connecting to the Autotask API failed. $($_.Exception.Message)"
+                Write-Error "Connecting to the Autotask API failed. $($_.Exception.Message)"
             }
         }
 
