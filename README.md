@@ -38,13 +38,13 @@ When the command runs, You will be asked for credentials. Using these, we will t
 
 The Base URI value has tab completion to help you find the correct one easily.
 
-### Filters
-
-To find resources using the API, execute the `Get-AutotaskAPIResource` function. For the `Get-AutotaskAPIResource` function, you will need either the ID of the resource you want to retrieve, or the JSON SearchQuery you want to execute.
-
 ### Pagination
 
 The API has automatic pagination, meaning if you are retrieving more than 500 records, the API will automatically fetch all items.
+
+### Filters
+
+To find resources using the API, execute the `Get-AutotaskAPIResource` function. For the `Get-AutotaskAPIResource` function, you will need either the ID of the resource you want to retrieve, or the JSON SearchQuery you want to execute.
 
 **Examples:**
 
