@@ -20,7 +20,9 @@ SOAP: 86,6 seconds
 
 This module has been published to the PowerShell Gallery. Use the following command to install:  
 
-    Install-Module AutotaskAPI
+```powershell
+Install-Module AutotaskAPI
+```
 
 ## Usage
 
@@ -28,13 +30,17 @@ This module has been published to the PowerShell Gallery. Use the following comm
 
 To get items using the Autotask API you'll first have to add the authentication headers using the `Add-AutotaskAPIAuth` function. Example:
 
-    $Creds = Get-Credential
-    
-    Add-AutotaskAPIAuth -ApiIntegrationCode 'ABCDEFGH00100244MMEEE333' -credentials $Creds
+```powershell
+$Creds = Get-Credential
+
+Add-AutotaskAPIAuth -ApiIntegrationCode 'ABCDEFGH00100244MMEEE333' -credentials $Creds
+```
 
 When the command runs, You will be asked for credentials. Using these, we will try to decide the correct webservice URL for your zone based on the e-mail address. If this fails you must manually set the webservice URL.
 
-    Add-AutotaskBaseURI -BaseURI https://webservices1.autotask.net/atservicesrest
+```powershell
+Add-AutotaskBaseURI -BaseURI https://webservices1.autotask.net/atservicesrest
+```
 
 The Base URI value has tab completion to help you find the correct one easily. For more information about zones consult the [Autotask API Docs about zones](https://www.autotask.net/help/developerhelp/Content/APIs/General/API_Zones.htm) or [Autotask User Login help](https://www.autotask.net/help/Content/2_Getting_Started/LogIntoAutotask.htm?Highlight=hosted)
 
@@ -62,77 +68,103 @@ You can find examples for filters below. In addition the [Autotask documentation
 
 To find the company with ID 12345:
 
-    Get-AutotaskAPIResource -Resource Companies -ID 12345
+```powershell
+Get-AutotaskAPIResource -Resource Companies -ID 12345
+```
 
 To get all companies that are Active:
 
-    Get-AutotaskAPIResource -Resource Companies -SearchQuery '{"filter":[{"op":"eq","field":"isactive","value":"true"}]}'
-    
-    or
-    
-    Get-AutotaskAPIResource -Resource Companies -SimpleSearch "isactive eq $true"
+```powershell
+Get-AutotaskAPIResource -Resource Companies -SearchQuery '{"filter":[{"op":"eq","field":"isactive","value":"true"}]}'
+
+or
+
+Get-AutotaskAPIResource -Resource Companies -SimpleSearch "isactive eq $true"
+```
 
 To get all companies that start with the letter A:
 
-    Get-AutotaskAPIResource -Resource Companies -SimpleSearch "companyname beginswith A"
+```powershell
+Get-AutotaskAPIResource -Resource Companies -SimpleSearch "companyname beginswith A"
+```
 
 To get all child alerts for company 1234
 
-    Get-AutotaskAPIResource -Resource CompanyAlertsChild -ID 1234 -verbose
+```powershell
+Get-AutotaskAPIResource -Resource CompanyAlertsChild -ID 1234 -verbose
+```
 
 To get only child 7 in company id 1234
 
-    Get-AutotaskAPIResource -Resource CompanyAlertsChild -ID 29683578 -ChildID 7
+```powershell
+Get-AutotaskAPIResource -Resource CompanyAlertsChild -ID 29683578 -ChildID 7
+```
 
 ### Combine Data with other Modules
 
 It's also possible to use this module to combine stuff, for example to create a Microsoft Team for each open project:
 
-    Import-Module MicrosoftTeams
-    Connect-MicrosoftTeams
-    Add-AutotaskAPIAuth
-    $Projects = Get-AutotaskAPIResource -Resource Projects -SimpleSearch 'status ne completed'
-    foreach ($Project in $Projects) {
-        $NewTeam = New-Team -MailNickname "$($project.projectnumber)" -DisplayName "$($project.projectnumber) - $($project.name)" -Visibility "private"
-        $TeamLeadEmail = (Get-AutotaskAPIResource -Resource resources -ID $($project.projectLeadResourceID)).email
-        Add-TeamUser -GroupId $NewTeam.GroupId -User $TeamLeadEmail
-    }
+```powershell
+Import-Module MicrosoftTeams
+Connect-MicrosoftTeams
+Add-AutotaskAPIAuth
+$Projects = Get-AutotaskAPIResource -Resource Projects -SimpleSearch 'status ne completed'
+foreach ($Project in $Projects) {
+    $NewTeam = New-Team -MailNickname "$($project.projectnumber)" -DisplayName "$($project.projectnumber) - $($project.name)" -Visibility "private"
+    $TeamLeadEmail = (Get-AutotaskAPIResource -Resource resources -ID $($project.projectLeadResourceID)).email
+    Add-TeamUser -GroupId $NewTeam.GroupId -User $TeamLeadEmail
+}
+```
 
 ### POST/Create data in Autotask
 
 To create a new company, we can either make the entire body ourselves, or use the `New-AutotaskBody` function.
 
-    $Body = New-AutotaskBody -Resource Companies
+```powershell
+$Body = New-AutotaskBody -Resource Companies
+```
 
 This creates a body for the model Company. Definitions can be tab-completed. The body will contain all expected values. If you want an empty body instead, use:
 
-    $Body = New-AutotaskBody -Resource Companies -NoContent
+```powershell
+$Body = New-AutotaskBody -Resource Companies -NoContent
+```
 
 If you only want to know what picklist options are available, for a specific resource use the following:
 
-    (New-AutotaskBody -Resource Tickets -NoContent).status
+```powershell
+(New-AutotaskBody -Resource Tickets -NoContent).status
+```
 
 This will print a list with all possible options.
 
 After setting the values for the body you want, execute:
 
-    New-AutotaskAPIResource -Resource Companies -Body $body
+```powershell
+New-AutotaskAPIResource -Resource Companies -Body $body
+```
 
 ### PATCH/Update data in Autotask
 
 To set existing companies, use the `Set-AutotaskAPIResource` function. This uses the Patch method so remember to remove any properties you do not want updated.
 
-    Set-AutotaskAPIResource -Body $body
+```powershell
+Set-AutotaskAPIResource -Body $body
+```
 
 Both `Set-AutotaskAPIResource` and `New-AutotaskAPIResource` accept pipeline input, for example, to change a title of a specific ticket:
 
-    $Ticket = Get-AutotaskAPIResource -Resource tickets -SimpleSearch "id eq 12345"
+```powershell
+$Ticket = Get-AutotaskAPIResource -Resource tickets -SimpleSearch "id eq 12345"
+```
 
 Or to close all tickets with the subject "Nope!"
 
-    $TicketList = Get-AutotaskAPIResource -Resource Tickets -SimpleSearch "title eq Nope!"
-    $TicketList | ForEach-Object { $_.status = "12" }
-    $TicketList | Set-AutotaskAPIResource -Resource Tickets
+```powershell
+$TicketList = Get-AutotaskAPIResource -Resource Tickets -SimpleSearch "title eq Nope!"
+$TicketList | ForEach-Object { $_.status = "12" }
+$TicketList | Set-AutotaskAPIResource -Resource Tickets
+```
 
 Or a one-liner to change all companies webaddresses to "google.com"
 
