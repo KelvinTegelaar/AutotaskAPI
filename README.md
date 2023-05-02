@@ -168,7 +168,9 @@ $TicketList | Set-AutotaskAPIResource -Resource Tickets
 
 Or a one-liner to change all companies webaddresses to "google.com"
 
-    Get-AutotaskAPIResource -Resource Companies -SimpleSearch 'Isactive eq true' | ForEach-Object {$_.Webaddress = "www.google.com"; $_} | Set-AutotaskAPIResource -Resource Companies
+```powershell
+Get-AutotaskAPIResource -Resource Companies -SimpleSearch 'Isactive eq true' | ForEach-Object {$_.Webaddress = "www.google.com"; $_} | Set-AutotaskAPIResource -Resource Companies
+```
 
 ## Contributions
 
