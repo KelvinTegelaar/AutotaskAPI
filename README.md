@@ -1,4 +1,4 @@
-﻿# AutotaskAPI PowerShell Module
+# AutotaskAPI PowerShell Module
 
 This is a PowerShell wrapper for the new Autotask REST API, released by Datto in version 2020.2. This API is a replacement of the SOAP API. The REST API is faster and easier to develop for, than the SOAP API. If you need to use the SOAP API for whatever reason, then check out the project [Autotask by ecitsolutions](https://github.com/ecitsolutions/Autotask). This is by far the best wrapper for the SOAP API.
 
@@ -20,7 +20,7 @@ SOAP: 86,6 seconds
 
 This module has been published to the PowerShell Gallery. Use the following command to install:  
 
-    install-module AutotaskAPI
+    Install-Module AutotaskAPI
 
 ## Usage
 
@@ -28,11 +28,11 @@ This module has been published to the PowerShell Gallery. Use the following comm
 
 To get items using the Autotask API you'll first have to add the authentication headers using the `Add-AutotaskAPIAuth` function. Example:
 
-    $Creds = get-credential
+    $Creds = Get-Credential
     
-    Add-AutotaskAPIAuth -ApiIntegrationcode 'ABCDEFGH00100244MMEEE333' -credentials $Creds
+    Add-AutotaskAPIAuth -ApiIntegrationCode 'ABCDEFGH00100244MMEEE333' -credentials $Creds
 
-When the command runs, You will be asked for credentials. Using these, we will try to decide the correct webservices URL for your zone based on the e-mail address. If this fails you must manually set the webservices URL.
+When the command runs, You will be asked for credentials. Using these, we will try to decide the correct webservice URL for your zone based on the e-mail address. If this fails you must manually set the webservice URL.
 
     Add-AutotaskBaseURI -BaseURI https://webservices1.autotask.net/atservicesrest
 
@@ -58,13 +58,13 @@ To get all companies that are Active:
     
     or
     
-    Get-AutotaskAPIResource -resource Companies -SimpleSearch "isactive eq $true"
+    Get-AutotaskAPIResource -Resource Companies -SimpleSearch "isactive eq $true"
 
 For more filtering options, check out the [Autotask documentation](https://www.autotask.net/help/developerhelp/Content/APIs/REST/API_Calls/REST_Basic_Query_Calls.htm)
 
 To get all companies that start with the letter A:
 
-    Get-AutotaskAPIResource -resource Companies -SimpleSearch "companyname beginswith A"
+    Get-AutotaskAPIResource -Resource Companies -SimpleSearch "companyname beginswith A"
 
 To get all child alerts for company 1234
 
@@ -72,9 +72,10 @@ To get all child alerts for company 1234
 
 To get only child 7 in company id 1234
 
+    Get-AutotaskAPIResource -Resource CompanyAlertsChild -ID 29683578 -ChildID 7
     Get-AutotaskAPIResource -Resource CompanyAlertsChild -ID 29683578 -childid 7
 
- It's also possible to use this module to combine stuff, for example to create a Microsoft Team for each open project:
+It's also possible to use this module to combine stuff, for example to create a Microsoft Team for each open project:
 
     Import-Module MicrosoftTeams
     Connect-MicrosoftTeams
@@ -82,7 +83,7 @@ To get only child 7 in company id 1234
     $Projects = Get-AutotaskAPIResource -Resource Projects -SimpleSearch 'status ne completed'
     foreach ($Project in $Projects) {
         $NewTeam = New-Team -MailNickname "$($project.projectnumber)" -DisplayName "$($project.projectnumber) - $($project.name)" -Visibility "private"
-        $TeamLeadEmail = (Get-AutotaskAPIResource -Resource resources -id $($project.projectLeadResourceID)).email
+        $TeamLeadEmail = (Get-AutotaskAPIResource -Resource resources -ID $($project.projectLeadResourceID)).email
         Add-TeamUser -GroupId $NewTeam.GroupId -User $TeamLeadEmail
     }
 
@@ -96,7 +97,7 @@ This creates a body for the model Company. Definitions can be tab-completed. The
 
 If you only want to know what picklist options are available, for a specific resource use the following:
 
-(New-AutotaskBody -Resource Tickets -NoContent).status
+    (New-AutotaskBody -Resource Tickets -NoContent).status
 
 This will print a list with all possible options.
 
@@ -108,9 +109,9 @@ To set existing companies, use the `Set-AutotaskAPIResource` function. This uses
 
     Set-AutotaskAPIResource -Body $body
 
-Both `Set-AutotaskAPIResource` and `new-AutotaskAPIResource` accept pipeline input, for example, to change a title of a specific ticket:
+Both `Set-AutotaskAPIResource` and `New-AutotaskAPIResource` accept pipeline input, for example, to change a title of a specific ticket:
 
-    $Ticket = Get-AutotaskAPIResource -resource tickets -SimpleSearch "id eq 12345"
+    $Ticket = Get-AutotaskAPIResource -Resource tickets -SimpleSearch "id eq 12345"
 
 Or to close all tickets with the subject "Nope!"
 
@@ -120,7 +121,7 @@ Or to close all tickets with the subject "Nope!"
 
 Or a one-liner to change all companies webaddresses to "google.com"
 
-    Get-AutotaskAPIResource -Resource Companies -SimpleSearch 'Isactive eq true' | ForEach-Object {$_.Webaddress = "www.google.com"; $_} | Set-AutotaskAPIResource -Resource companies
+    Get-AutotaskAPIResource -Resource Companies -SimpleSearch 'Isactive eq true' | ForEach-Object {$_.Webaddress = "www.google.com"; $_} | Set-AutotaskAPIResource -Resource Companies
 
 ## Contributions
 
