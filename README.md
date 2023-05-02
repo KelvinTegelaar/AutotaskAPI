@@ -1,4 +1,4 @@
-﻿# AutotaskAPI PowerShell Module
+# AutotaskAPI PowerShell Module
 
 This is a PowerShell wrapper for the new Autotask REST API, released by Datto in version 2020.2. This API is a replacement of the SOAP API. The REST API is faster and easier to develop for, than the SOAP API. If you need to use the SOAP API for whatever reason, then check out the project [Autotask by ecitsolutions](https://github.com/ecitsolutions/Autotask). This is by far the best wrapper for the SOAP API.
 
@@ -46,6 +46,16 @@ The Powershell Module has automatic pagination, meaning if you are retrieving mo
 
 To find resources using the API, execute the `Get-AutotaskAPIResource` function. For the `Get-AutotaskAPIResource` function, you will need either the ID of the resource you want to retrieve, or the JSON SearchQuery you want to execute.
 
+With this Module, you can either use native JSON filters that are sent to the API. In this scenario use the *-SearchQuery* option. This allows for complex filters with AND / OR dependencies:
+
+- all companies that are active
+- all companies that are active and type customer
+- all companies that are ((active and with (type customer or partner) and have UDF 'cool company' set to 'YES') or are located in countryId 42 and managed by Jim)
+
+If you don't need more than one filter set, you can use *-SimpleSearch* instead. Simple search will build a single JSON statement for you. Simple filters doesn't support  multiple statements and is therefor limited to one single filter (e.g. all companies with "isactive = true").
+
+You can find examples for filters below. In addition the [Autotask documentation about Basic Queries](https://www.autotask.net/help/developerhelp/Content/APIs/REST/API_Calls/REST_Basic_Query_Calls.htm) contains a documentation of all keywords and further examples, that might help.
+
 ## Examples
 
 ### GET/Read data from Autotask
@@ -61,8 +71,6 @@ To get all companies that are Active:
     or
     
     Get-AutotaskAPIResource -Resource Companies -SimpleSearch "isactive eq $true"
-
-For more filtering options, check out the [Autotask documentation](https://www.autotask.net/help/developerhelp/Content/APIs/REST/API_Calls/REST_Basic_Query_Calls.htm)
 
 To get all companies that start with the letter A:
 
