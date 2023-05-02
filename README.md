@@ -72,13 +72,15 @@ To find the company with ID 12345:
 Get-AutotaskAPIResource -Resource Companies -ID 12345
 ```
 
-To get all companies that are Active:
+To get all companies that are Active with SearchQuery:
 
 ```powershell
 Get-AutotaskAPIResource -Resource Companies -SearchQuery '{"filter":[{"op":"eq","field":"isactive","value":"true"}]}'
+```
 
-or
+To get all companies that are Active with SimpleSearch:
 
+```powershell
 Get-AutotaskAPIResource -Resource Companies -SimpleSearch "isactive eq $true"
 ```
 
