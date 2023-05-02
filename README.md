@@ -1,4 +1,4 @@
-﻿# AutotaskAPI PowerShell Module
+# AutotaskAPI PowerShell Module
 
 This is a PowerShell wrapper for the new Autotask REST API, released by Datto in version 2020.2. This API is a replacement of the SOAP API. The REST API is faster and easier to develop for, than the SOAP API. If you need to use the SOAP API for whatever reason, then check out the project [Autotask by ecitsolutions](https://github.com/ecitsolutions/Autotask). This is by far the best wrapper for the SOAP API.
 
@@ -66,7 +66,7 @@ To find the company with ID 12345:
 
 To get all companies that are Active:
 
-    Get-AutotaskAPIResource -Resource Companies -SearchQuery '{"filter":[{"op":"eq","field":"isactive","value":"true"}]}
+    Get-AutotaskAPIResource -Resource Companies -SearchQuery '{"filter":[{"op":"eq","field":"isactive","value":"true"}]}'
     
     or
     
