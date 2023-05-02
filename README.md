@@ -1,4 +1,4 @@
-# AutotaskAPI PowerShell Module
+﻿# AutotaskAPI PowerShell Module
 
 This is a PowerShell wrapper for the new Autotask REST API, released by Datto in version 2020.2. This API is a replacement of the SOAP API. The REST API is faster and easier to develop for, than the SOAP API. If you need to use the SOAP API for whatever reason, then check out the project [Autotask by ecitsolutions](https://github.com/ecitsolutions/Autotask). This is by far the best wrapper for the SOAP API.
 
@@ -173,6 +173,27 @@ Or a one-liner to change all companies webaddresses to "google.com"
 ```powershell
 Get-AutotaskAPIResource -Resource Companies -SimpleSearch 'Isactive eq true' | ForEach-Object {$_.Webaddress = "www.google.com"; $_} | Set-AutotaskAPIResource -Resource Companies
 ```
+
+### DELETE/Remove data from API
+
+> **WARNING**
+> You can and will delete actually data from your PSA instance. There is no recycle bin or restore function, if you defined faulty filters or used wrong IDs. Therefore all examples are permitted in execution by using -Confirm $false. If you copy and paste the lines, they won't be executed.
+
+If Confirm is not set, the Module won't delete data from Autotask.
+
+Delete the company with ID 1234. Each item in the object will be removed. Confirmation will be required.
+
+```powershell
+Remove-AutotaskAPIResource -Resource Companies -ID 1234 -Confirm $false
+```
+
+`Remove-AutotaskAPIResource` also accept pipeline input.
+
+```powershell
+Get-AutotaskAPIResource -Resource Companies -SimpleSearch 'Isactive eq true' | Remove-AutotaskAPIResource -Confirm $false
+```
+
+<!-- #TODO: Check, whether an array of IDs is actually supported -->
 
 ## Contributions
 
