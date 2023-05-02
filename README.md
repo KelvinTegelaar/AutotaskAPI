@@ -2,7 +2,7 @@
 
 This is a PowerShell wrapper for the new Autotask REST API, released by Datto in version 2020.2. This API is a replacement of the SOAP API. The REST API is faster and easier to develop for, than the SOAP API. If you need to use the SOAP API for whatever reason, then check out the project [Autotask by ecitsolutions](https://github.com/ecitsolutions/Autotask). This is by far the best wrapper for the SOAP API.
 
-For more information, check out the [Datto/Autotask](https://www.datto.com/integrations?query=powershell&products=Autotask+PSA&categories=Middleware+%26+Developers) page about this module too.
+For more information, check out the [Datto/Autotask](https://www.datto.com/integrations/lime-networks-b-v-cyberdrain-com) page about this module too.
 
 Some users wanted a benchmark of the new API. The following results have been performed on the sandbox of Autotask, to which I have a RTT of about 150-180MS.
 
