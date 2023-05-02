@@ -1,4 +1,4 @@
-# AutotaskAPI PowerShell Module
+﻿# AutotaskAPI PowerShell Module
 
 This is a PowerShell wrapper for the new Autotask REST API, released by Datto in version 2020.2. This API is a replacement of the SOAP API. The REST API is faster and easier to develop for, than the SOAP API. If you need to use the SOAP API for whatever reason, then check out the project [Autotask by ecitsolutions](https://github.com/ecitsolutions/Autotask). This is by far the best wrapper for the SOAP API.
 
@@ -46,7 +46,9 @@ The Powershell Module has automatic pagination, meaning if you are retrieving mo
 
 To find resources using the API, execute the `Get-AutotaskAPIResource` function. For the `Get-AutotaskAPIResource` function, you will need either the ID of the resource you want to retrieve, or the JSON SearchQuery you want to execute.
 
-**Examples:**
+## Examples
+
+### GET/Read data from Autotask
 
 To find the company with ID 12345:
 
@@ -73,7 +75,8 @@ To get all child alerts for company 1234
 To get only child 7 in company id 1234
 
     Get-AutotaskAPIResource -Resource CompanyAlertsChild -ID 29683578 -ChildID 7
-    Get-AutotaskAPIResource -Resource CompanyAlertsChild -ID 29683578 -childid 7
+
+### Combine Data with other Modules
 
 It's also possible to use this module to combine stuff, for example to create a Microsoft Team for each open project:
 
@@ -86,6 +89,8 @@ It's also possible to use this module to combine stuff, for example to create a 
         $TeamLeadEmail = (Get-AutotaskAPIResource -Resource resources -ID $($project.projectLeadResourceID)).email
         Add-TeamUser -GroupId $NewTeam.GroupId -User $TeamLeadEmail
     }
+
+### Create data in Autotask
 
 To create a new company, we can either make the entire body ourselves, or use the `New-AutotaskBody` function.
 
@@ -104,6 +109,8 @@ This will print a list with all possible options.
 After setting the values for the body you want, execute:
 
     New-AutotaskAPIResource -Resource Companies -Body $body
+
+### Update data in Autotask
 
 To set existing companies, use the `Set-AutotaskAPIResource` function. This uses the Patch method so remember to remove any properties you do not want updated.
 
