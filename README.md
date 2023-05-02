@@ -36,11 +36,11 @@ When the command runs, You will be asked for credentials. Using these, we will t
 
     Add-AutotaskBaseURI -BaseURI https://webservices1.autotask.net/atservicesrest
 
-The Base URI value has tab completion to help you find the correct one easily.
+The Base URI value has tab completion to help you find the correct one easily. For more information about zones consult the [Autotask API Docs about zones](https://www.autotask.net/help/developerhelp/Content/APIs/General/API_Zones.htm) or [Autotask User Login help](https://www.autotask.net/help/Content/2_Getting_Started/LogIntoAutotask.htm?Highlight=hosted)
 
 ### Pagination
 
-The API has automatic pagination, meaning if you are retrieving more than 500 records, the API will automatically fetch all items.
+The Powershell Module has automatic pagination, meaning if you are retrieving more than 500 records from the API, it will automatically fetch all items.
 
 ### Filters
 
