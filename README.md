@@ -198,6 +198,7 @@ Get-AutotaskAPIResource -Resource Companies -SimpleSearch 'Isactive eq true' | R
 ## Contributions
 
 Feel free to send pull requests or fill out issues when you encounter them. I'm also completely open to adding direct maintainers/contributors and working together! :)
+You can find more information at [Contributing](./.github/Contributing.md)
 
 ## Future plans
 
