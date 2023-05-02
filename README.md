@@ -66,7 +66,7 @@ To get all companies that are Active:
     
       
 
-For more filtering options, check out the Autotask documentation at https://www.autotask.net/help/developerhelp/Content/APIs/REST/API_Calls/REST_Basic_Query_Calls.htm
+For more filtering options, check out the [Autotask documentation](https://www.autotask.net/help/developerhelp/Content/APIs/REST/API_Calls/REST_Basic_Query_Calls.htm)
 
 To get all companies that start with the letter A:
 
