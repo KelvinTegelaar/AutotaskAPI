@@ -1,4 +1,4 @@
-# AutotaskAPI PowerShell Module
+﻿# AutotaskAPI PowerShell Module
 
 This is a PowerShell wrapper for the new Autotask REST API, released by Datto in version 2020.2. This API is a replacement of the SOAP API. The REST API is faster and easier to develop for, than the SOAP API. If you need to use the SOAP API for whatever reason, then check out the project [Autotask by ecitsolutions](https://github.com/ecitsolutions/Autotask). This is by far the best wrapper for the SOAP API.
 
@@ -98,7 +98,7 @@ It's also possible to use this module to combine stuff, for example to create a 
         Add-TeamUser -GroupId $NewTeam.GroupId -User $TeamLeadEmail
     }
 
-### Create data in Autotask
+### POST/Create data in Autotask
 
 To create a new company, we can either make the entire body ourselves, or use the `New-AutotaskBody` function.
 
@@ -118,7 +118,7 @@ After setting the values for the body you want, execute:
 
     New-AutotaskAPIResource -Resource Companies -Body $body
 
-### Update data in Autotask
+### PATCH/Update data in Autotask
 
 To set existing companies, use the `Set-AutotaskAPIResource` function. This uses the Patch method so remember to remove any properties you do not want updated.
 
