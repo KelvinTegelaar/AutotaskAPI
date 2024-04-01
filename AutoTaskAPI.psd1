@@ -12,7 +12,7 @@
     RootModule        = '.\AutoTaskAPI.psm1'
     
     # Version number of this module.
-    ModuleVersion     = '1.2.2'
+    ModuleVersion     = '1.2.3'
     
     # Supported PSEditions
     # CompatiblePSEditions = @()

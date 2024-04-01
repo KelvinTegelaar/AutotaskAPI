@@ -60,7 +60,7 @@ function Set-AutotaskAPIResource {
         if ($ID) {
             $MyBody | Add-Member -NotePropertyMembers @{id=$ID}
         }
-        $PSBoundParameters.body.PSObject.properties | Where-Object {$null -ne $_.Value} | ForEach-Object {Add-Member -InputObject $MyBody -NotePropertyMembers @{$_.Name=$_.Value}}
+        $PSBoundParameters.body.PSObject.properties | Where-Object {$null -ne $_.Value} | ForEach-Object {Add-Member -Force -InputObject $MyBody -NotePropertyMembers @{$_.Name=$_.Value}}
 
         try {
             # Iterating through the property names above produces an array of n MyBody objects, all the same,
