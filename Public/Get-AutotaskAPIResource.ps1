@@ -84,7 +84,16 @@ function Get-AutotaskAPIResource {
                     $body = $SearchQuery
                 }
                 Default {
-                    $ResourceURL = ("$($ResourceURL.name)/query?search=$SearchQuery" -replace '{PARENTID}', '')
+                    if (($Script:AutotaskBaseURI.Length + $ResourceURL.name.Length + $SearchQuery.Length + 15 + 50) -ge 2100){
+                        #15 characters for "//query?search="
+                        #TODO: Calculation does not include Overwritten ParentID and is currently a better estimation. Therefore a "safe factor" of +50 chars is used
+                        Write-Information "Using POST-Request as Request exceeded limit of 2100 characters. You can use -Method GET/POST to set a fixed Method."
+                        $ResourceURL = ("$($ResourceURL.name)/query" -replace '{PARENTID}', '')
+                        $body = $SearchQuery
+                        $Method = "POST"
+                    } else {
+                        $ResourceURL = ("$($ResourceURL.name)/query?search=$SearchQuery" -replace '{PARENTID}', '')
+                    }
                 }
             } 
         }
