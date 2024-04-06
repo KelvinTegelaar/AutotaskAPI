@@ -13,6 +13,7 @@
 .INPUTS
     -ID: Search by Autotask ID. Accept pipeline input.
     -SearchQuery: JSON search filter.
+    -Method: Forces a GET or POST Request
     -SimpleSearch: a simple search filter, e.g. name eq Lime
    
 .OUTPUTS
@@ -30,6 +31,9 @@ function Get-AutotaskAPIResource {
         [String]$ChildID,
         [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $true)]
         [String]$SearchQuery,
+        [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $false)]
+        [ValidateSet("GET", "POST")]
+        [String]$Method,
         [Parameter(ParameterSetName = 'SimpleSearch', Mandatory = $true)]
         [String]$SimpleSearch
     )
@@ -71,12 +75,27 @@ function Get-AutotaskAPIResource {
             $ResourceURL = ("$($ResourceURL)/$ChildID")
         }
         if ($SearchQuery) { 
-            $ResourceURL = ("$($ResourceURL.name)/query?search=$SearchQuery" -replace '{PARENTID}', '')
+            switch ($Method) {
+                GET {
+                    $ResourceURL = ("$($ResourceURL.name)/query?search=$SearchQuery" -replace '{PARENTID}', '')
+                }
+                POST {
+                    $ResourceURL = ("$($ResourceURL.name)/query" -replace '{PARENTID}', '')
+                    $body = $SearchQuery
+                }
+                Default {
+                    $ResourceURL = ("$($ResourceURL.name)/query?search=$SearchQuery" -replace '{PARENTID}', '')
+                }
+            } 
         }
         $SetURI = "$($Script:AutotaskBaseURI)/$($ResourceURL)"
         try {
             do {
-                $items = Invoke-RestMethod -Uri $SetURI -Headers $Headers -Method Get
+                switch ($Method) {
+                    GET {$items = Invoke-RestMethod -Uri $SetURI -Headers $Headers -Method Get}
+                    POST {$items = Invoke-RestMethod -Uri $SetURI -Headers $Headers -Method Post -Body $Body}
+                    Default {$items = Invoke-RestMethod -Uri $SetURI -Headers $Headers -Method Get}
+                }
                 $SetURI = $items.PageDetails.NextPageUrl
                 #[System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([datetime]::UtcNow, (get-timezone).id)
             
