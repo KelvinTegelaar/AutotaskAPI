@@ -9,13 +9,11 @@
 
     Get-AutotaskAPIResource -resource Companies -SearchQuery "{filter='active -eq True'}"
     Gets all companies with the filter "Active = true"
-
 .INPUTS
     -ID: Search by Autotask ID. Accept pipeline input.
     -SearchQuery: JSON search filter.
     -Method: Forces a GET or POST Request
     -SimpleSearch: a simple search filter, e.g. name eq Lime
-   
 .OUTPUTS
     none
 .NOTES
@@ -59,7 +57,6 @@ function Get-AutotaskAPIResource {
                         value = $SearchOps | Select-Object -Skip 2
                     })
             } -Compress
-            
         }
     }
 
@@ -110,13 +107,11 @@ function Get-AutotaskAPIResource {
             
                 if ($items.items) { 
                     foreach ($item in $items.items) {
-
                         $item
                     }
                 }
                 if ($items.item) {
                     foreach ($item in $items.item) {
-
                         $item
                     }
                     
