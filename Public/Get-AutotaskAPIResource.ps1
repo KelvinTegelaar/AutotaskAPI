@@ -81,9 +81,10 @@ function Get-AutotaskAPIResource {
                     $body = $SearchQuery
                 }
                 Default {
-                    if (($Script:AutotaskBaseURI.Length + $ResourceURL.name.Length + $SearchQuery.Length + 15 + 50) -ge 2048){
+                    if (($Script:AutotaskBaseURI.Length + $ResourceURL.name.Length + $SearchQuery.Length + 15 + 120 + 100) -ge 2048){
                         #15 characters for "//query?search="
-                        #TODO: Calculation does not include Overwritten ParentID and is currently a better estimation. Therefore a "safe factor" of +50 chars is used
+                        #TODO: Calculation does not include Overwritten ParentID and is currently a better estimation. Therefore a "safe factor" of +120 chars is used
+                        #100 characters for Call of next page (Including "paging={"pageSize":500,"previousIds":[<ID>],"nextIds":[<ID>]}&" UTF-8 encoded)
                         Write-Information "Using POST-Request as Request exceeded limit of 2100 characters. You can use -Method GET/POST to set a fixed Method."
                         $ResourceURL = ("$($ResourceURL.name)/query" -replace '{PARENTID}', '')
                         $body = $SearchQuery
