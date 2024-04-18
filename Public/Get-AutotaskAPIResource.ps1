@@ -7,8 +7,15 @@
     PS C:\>  Get-AutotaskAPIResource -resource Companies -id 1234 -verbose
     Gets the company with ID 1234
 
-    Get-AutotaskAPIResource -resource Companies -SearchQuery "{filter='active -eq True'}"
+    PS C:\>  Get-AutotaskAPIResource -Resource Companies -SearchQuery '{"filter":[{"op":"eq","field":"isactive","value":"true"}]}
     Gets all companies with the filter "Active = true"
+
+    PS C:\>  Get-AutotaskAPIResource -resource Companies -SimpleSearch "isactive eq $true"
+    Gets all companies with the filter "Active = true"
+
+    PS C:\>  Get-AutotaskAPIResource -resource Companies -SimpleSearch "companyname beginswith A"
+    Gets all companies that start with the letter A
+
 .INPUTS
     -ID: Search by Autotask ID. Accept pipeline input.
     -SearchQuery: JSON search filter.
