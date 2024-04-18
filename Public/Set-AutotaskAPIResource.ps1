@@ -66,7 +66,8 @@ function Set-AutotaskAPIResource {
             # Iterating through the property names above produces an array of n MyBody objects, all the same,
             # where n is the number of non-null properties.  Grab the first one.
             $SendingBody = $MyBody[0] | ConvertTo-Json -Depth 10
-            Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($ResourceURL)" -headers $Headers -Body $SendingBody -Method Patch
+            $EncodedSendingBody = [System.Text.Encoding]::UTF8.GetBytes($SendingBody)
+            Invoke-RestMethod -Uri "$($Script:AutotaskBaseURI)/$($ResourceURL)" -headers $Headers -Body $EncodedSendingBody -Method Patch
         }
         catch {
             if ($psversiontable.psversion.major -lt 6) {
