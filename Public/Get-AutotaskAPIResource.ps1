@@ -16,13 +16,11 @@
     PS C:\>  Get-AutotaskAPIResource -resource Companies -SimpleSearch "companyname beginswith A"
     Gets all companies that start with the letter A
 
-    See https://github.com/KelvinTegelaar/AutotaskAPI/blob/master/README.md for more examples.
-    
 .INPUTS
     -ID: Search by Autotask ID. Accept pipeline input.
     -SearchQuery: JSON search filter.
+    -Method: Forces a GET or POST Request
     -SimpleSearch: a simple search filter, e.g. name eq Lime
-   
 .OUTPUTS
     none
 .NOTES
@@ -38,6 +36,9 @@ function Get-AutotaskAPIResource {
         [String]$ChildID,
         [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $true)]
         [String]$SearchQuery,
+        [Parameter(ParameterSetName = 'SearchQuery', Mandatory = $false)]
+        [ValidateSet("GET", "POST")]
+        [String]$Method,
         [Parameter(ParameterSetName = 'SimpleSearch', Mandatory = $true)]
         [String]$SimpleSearch
     )
@@ -63,7 +64,6 @@ function Get-AutotaskAPIResource {
                         value = $SearchOps | Select-Object -Skip 2
                     })
             } -Compress
-            
         }
     }
 
@@ -79,24 +79,47 @@ function Get-AutotaskAPIResource {
             $ResourceURL = ("$($ResourceURL)/$ChildID")
         }
         if ($SearchQuery) { 
-            $ResourceURL = ("$($ResourceURL.name)/query?search=$SearchQuery" -replace '{PARENTID}', '')
+            switch ($Method) {
+                GET {
+                    $ResourceURL = ("$($ResourceURL.name)/query?search=$SearchQuery" -replace '{PARENTID}', '')
+                }
+                POST {
+                    $ResourceURL = ("$($ResourceURL.name)/query" -replace '{PARENTID}', '')
+                    $body = $SearchQuery
+                }
+                Default {
+                    if (($Script:AutotaskBaseURI.Length + $ResourceURL.name.Length + $SearchQuery.Length + 15 + 120 + 100) -ge 2048){
+                        #15 characters for "//query?search="
+                        #TODO: Calculation does not include Overwritten ParentID and is currently a better estimation. Therefore a "safe factor" of +120 chars is used
+                        #100 characters for Call of next page (Including "paging={"pageSize":500,"previousIds":[<ID>],"nextIds":[<ID>]}&" UTF-8 encoded)
+                        Write-Information "Using POST-Request as Request exceeded limit of 2100 characters. You can use -Method GET/POST to set a fixed Method."
+                        $ResourceURL = ("$($ResourceURL.name)/query" -replace '{PARENTID}', '')
+                        $body = $SearchQuery
+                        $Method = "POST"
+                    } else {
+                        $ResourceURL = ("$($ResourceURL.name)/query?search=$SearchQuery" -replace '{PARENTID}', '')
+                    }
+                }
+            } 
         }
         $SetURI = "$($Script:AutotaskBaseURI)/$($ResourceURL)"
         try {
             do {
-                $items = Invoke-RestMethod -Uri $SetURI -Headers $Headers -Method Get
+                switch ($Method) {
+                    GET {$items = Invoke-RestMethod -Uri $SetURI -Headers $Headers -Method Get}
+                    POST {$items = Invoke-RestMethod -Uri $SetURI -Headers $Headers -Method Post -Body $Body}
+                    Default {$items = Invoke-RestMethod -Uri $SetURI -Headers $Headers -Method Get}
+                }
                 $SetURI = $items.PageDetails.NextPageUrl
                 #[System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([datetime]::UtcNow, (get-timezone).id)
             
                 if ($items.items) { 
                     foreach ($item in $items.items) {
-
                         $item
                     }
                 }
                 if ($items.item) {
                     foreach ($item in $items.item) {
-
                         $item
                     }
                     
