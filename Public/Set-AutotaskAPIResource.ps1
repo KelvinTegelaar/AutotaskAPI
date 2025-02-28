@@ -57,11 +57,17 @@ function Set-AutotaskAPIResource {
     
     process {
         $MyBody = New-Object -TypeName PSObject
-        if ($ID) {
-            $MyBody | Add-Member -NotePropertyMembers @{id=$ID}
-        }
         $PSBoundParameters.body.PSObject.properties | Where-Object {$null -ne $_.Value} | ForEach-Object {Add-Member -InputObject $MyBody -NotePropertyMembers @{$_.Name=$_.Value}}
-
+        
+        if ($ID) {
+          $MyBody | Add-Member -NotePropertyMembers @{id=$ID} -Force
+        }
+        
+        if ($null -eq $MyBody.ID) {
+          Write-Warning "Body must contain an ID." 
+          break
+        }
+        
         try {
             # Iterating through the property names above produces an array of n MyBody objects, all the same,
             # where n is the number of non-null properties.  Grab the first one.
