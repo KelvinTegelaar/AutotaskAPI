@@ -55,6 +55,8 @@ function Get-AutotaskAPIResource {
         $Script:Index = $Script:Queries | Group-Object Index -AsHashTable -AsString
         $ResourceURL = @(($Script:Index[$resource] | Where-Object { $_.Get -eq $resource }))[0]
         $ResourceURL.name = $ResourceURL.name.replace("/query", "/{PARENTID}") 
+        # Fix path to InvoicePDF URL, must be unique vs. /Invoices in Swagger file
+        $ResourceURL.name = $ResourceURL.name.replace("V1.0/InvoicePDF", "V1.0/Invoices/{id}/InvoicePDF")
         if ($SimpleSearch) {
             $SearchOps = $SimpleSearch -split ' '
             $SearchQuery = ConvertTo-Json @{
@@ -102,7 +104,12 @@ function Get-AutotaskAPIResource {
                 }
             } 
         }
-        $SetURI = "$($Script:AutotaskBaseURI)/$($ResourceURL)"
+        # Write-Host "ResourceURL BEFORE IF:" $ResourceURL
+        if ($resource -eq "InvoicePDF" -and $ID) { 
+            $ResourceURL = ("$($ResourceURL)" -replace '{id}', "$($ID)") 
+        }
+        $SetURI = "$($Script:AutotaskBaseURI)$($ResourceURL)" # Removed separating / as it was doubling in output (but worked)
+        # Write-Host "Final SetURI:" $SetURI
         try {
             do {
                 switch ($Method) {
@@ -112,6 +119,10 @@ function Get-AutotaskAPIResource {
                 }
                 $SetURI = $items.PageDetails.NextPageUrl
                 #[System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([datetime]::UtcNow, (get-timezone).id)
+                # Returns blank unless $items itself is returned for InvoicePDF function
+                if($resource -eq "InvoicePDF") {
+                    return $items
+                }
             
                 if ($items.items) { 
                     foreach ($item in $items.items) {
