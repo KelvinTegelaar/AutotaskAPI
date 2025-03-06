@@ -65879,6 +65879,72 @@
         }
       }
     },
+    "/V1.0/InvoicePDF": {
+      "get": {
+        "tags": [
+          "InvoicePDF"
+        ],
+        "operationId": "InvoicePDF_QueryItem",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "ApiIntegrationCode",
+            "in": "header",
+            "description": "API Integration Code",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "UserName",
+            "in": "header",
+            "description": "User Name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Secret",
+            "in": "header",
+            "description": "Secret",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ImpersonationResourceId",
+            "in": "header",
+            "description": "Impersonation Resource Key",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/InvoicePDFModel"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
     "/V1.0/Invoices/query/count": {
       "get": {
         "tags": [
@@ -144130,6 +144196,29 @@
           "items": {
             "$ref": "#/definitions/UserDefinedField"
           }
+        }
+      }
+    },
+    "InvoicePDFModel": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "fileName": {
+          "type": "string"
+        },
+        "fileSize": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "data": {
+          "format": "byte",
+          "type": "string"
         }
       }
     },
