@@ -29,7 +29,10 @@ function Add-AutotaskAPIAuth (
     }
     write-host "Retrieving webservices URI based on username" -ForegroundColor Green
     try {
-        $Version = (Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/versioninformation").apiversions | select-object -last 1
+        # The bundled v1.json only describes V1.0 paths, so the zone lookup must use V1.0.
+        # Autotask now advertises "V2.0" in /versioninformation, and V2.0 has no zoneInformation
+        # route -- taking the last entry made this call 404 and left AutotaskBaseURI unset.
+        $Version = "V1.0"
         $AutotaskBaseURI = Invoke-RestMethod -Uri "https://webservices2.autotask.net/atservicesrest/$($Version)/zoneInformation?user=$($Script:AutotaskAuthHeader.UserName)"
         write-host "Setting AutotaskBaseURI to $($AutotaskBaseURI.url) using version $Version" -ForegroundColor green
         Add-AutotaskBaseURI -BaseURI $AutotaskBaseURI.url.Trim('/')
