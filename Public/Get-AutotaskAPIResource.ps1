@@ -63,7 +63,9 @@ function Get-AutotaskAPIResource {
                 filter = @(@{
                         field = $SearchOps[0]
                         op    = $SearchOps[1]
-                        value = $SearchOps | Select-Object -Skip 2
+                        # Join back to a scalar: a multi-word value (a date, a company name)
+                        # would otherwise serialize as a JSON array, which the API rejects.
+                        value = ($SearchOps | Select-Object -Skip 2) -join ' '
                     })
             } -Compress
         }
