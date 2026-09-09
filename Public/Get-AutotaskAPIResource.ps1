@@ -54,7 +54,15 @@ function Get-AutotaskAPIResource {
         $headers = $Script:AutotaskAuthHeader
         $Script:Index = $Script:Queries | Group-Object Index -AsHashTable -AsString
         $ResourceURL = @(($Script:Index[$resource] | Where-Object { $_.Get -eq $resource }))[0]
-        $ResourceURL.name = $ResourceURL.name.replace("/query", "/{PARENTID}") 
+        # BUGFIX: Clone the object instead of mutating the global $Script:Queries table
+        $ResourceURL = [PSCustomObject]@{
+            Index  = $ResourceURL.Index
+            Name   = $ResourceURL.Name.replace("/query", "/{PARENTID}")
+            Get    = $ResourceURL.Get
+            Post   = $ResourceURL.Post
+            Patch  = $ResourceURL.Patch
+            Delete = $ResourceURL.Delete
+        }
         # Fix path to InvoicePDF URL, must be unique vs. /Invoices in Swagger file
         $ResourceURL.name = $ResourceURL.name.replace("V1.0/InvoicePDF", "V1.0/Invoices/{id}/InvoicePDF")
         if ($SimpleSearch) {
